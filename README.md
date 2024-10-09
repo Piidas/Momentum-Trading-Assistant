@@ -110,21 +110,13 @@ Are there any other noticeable deviations to normal operation?
 
 
 
-As a further support of your trading in case of US-market stocks, the code provides an information about the days to the next Earnings Calls of the companies mentioned in your DailyTradingPlan, see Figure 5 as an example.
+As a further support of your trading in case of US-market stocks, the code provides an information about the days to the next Earnings Calls of the companies mentioned in your DailyTradingPlan, see the Figure below as an example.
 
 ![image](https://github.com/user-attachments/assets/5ef1cd22-fc86-4c4f-9827-766c69a83853)
 
-Figure 5 - Next Earnings Calls
-
-
-
-The codes gives you a warning if one earnings call is only three days or less away. Further, MTA checks if the open positions as defined in your DailyTradingPlan are matching the open positions in your portfolio for the given currency (and therefore market) of the assets. In case this matches, the confirming message is shown in Figure 6. If this is not the case, MTA gives you a warning. This shall assure that all positions will be covered by a bracket order.
+The codes gives you a warning if one earnings call is only three days or less away. Further, MTA checks if the open positions as defined in your DailyTradingPlan are matching the open positions in your portfolio for the given currency (and therefore market) of the assets. In case this matches, the confirming message is shown in the Figure below. If this is not the case, MTA gives you a warning. This shall assure that all positions will be covered by a bracket order.
 
 ![image](https://github.com/user-attachments/assets/0dea2da4-7c56-4b98-8372-3beb185b255b)
-
-Figure 6 - DailyTradingPlan matches open portfolio positions
-
-
 
 If there are any issues during this starting phase of MTA, consider interrupting the code e.g. through STRG + C and restarting it with updated information.
 
