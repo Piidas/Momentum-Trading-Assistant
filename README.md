@@ -22,7 +22,7 @@ This code is tested through my personal use for the US markets during the last s
 
 This section contains all necessary steps you need to get MTA up and running:
 
-  1) Ensure your IB TWS is set up properly to use the API with port 7496 (see IB documentation at https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#tws-config-api)
+  1) Ensure your IB TWS is set up properly to use the API with port 7496 see IB documentation at https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#tws-config-api
 
   2) Subscribe to the relevant market data on you IB-account
 
