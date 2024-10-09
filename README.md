@@ -12,7 +12,7 @@ The program can be started e.g. through the cmd prompt after you have opened and
 
 MTA is meant not only for trading-enthusiasts among the IT community, but also momentum traders with only limited IT and esp. coding know-how. Please therefore excuse that some explanations in the README as well as the User Manual are somewhat nitty gritty.
 
-This README provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the User Manual as provided within this project.
+This README provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the [User Manual](./User Manual - Momentum Trading Assistant.pdf) as provided within this project.
 
 # Liabilities
 
