@@ -74,31 +74,21 @@ Open the cmd prompt or your favorite IDE and locate the folder where the program
 
 Start the program through its file name e.g. “python main.py”.
 
-Define which market you want to trade, see Figure 1.
+Define which market you want to trade, see Figure below.
 
 ![image](https://github.com/user-attachments/assets/21979062-77f8-4c37-aba3-d7f66b572dfd)
 
-Figure 1 - Which market do you want to trade?
-
-Afterwards, an extract of your DailyTradingPlan will be printed and you will be asked to confirm that the DailyTradingPlan is correct with “y” in case, see Figure 2.
+Afterwards, an extract of your DailyTradingPlan will be printed and you will be asked to confirm that the DailyTradingPlan is correct with “y” in case, see Figure below.
 
 ![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2)
 
-Figure 2 - Is DailyTradingPlan up-to-date?
-
-Then define what %-invested you would like to go as a maximum for the day, see Figure 3. The entered value can be 0 < x < ∞ and therefore can also be used for a margin account. Please see further information on the significance of this value in the User Manual.
+Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be 0 < x < ∞ and therefore can also be used for a margin account. Please see further information on the significance of this value in the User Manual.
 
 ![image](https://github.com/user-attachments/assets/c4df87a1-9e76-447d-a6b2-5dda474f04d4)
 
-Figure 3 - Maximum %-invested for the day
-
-
-
-Finally, chose the indices of the correct market opening and closing hours while considering that indices start counting at 0, see Figure 4.
+Finally, chose the indices of the correct market opening and closing hours while considering that indices start counting at 0, see Figure below.
 
 ![image](https://github.com/user-attachments/assets/cbeb0642-a38d-4576-b9f1-1e70f4eb9f50)
-
-Figure 4 - Choose next market opening and closing time
 
 
 
