@@ -12,7 +12,7 @@ The program can be started e.g. through the cmd prompt after you have opened and
 
 MTA is meant not only for trading-enthusiasts among the IT community, but also momentum traders with only limited IT and esp. coding know-how. Please therefore excuse that some explanations in the README as well as the User Manual are somewhat nitty gritty.
 
-This README provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the [User Manual](./User Manual - Momentum Trading Assistant.pdf) as provided within this project.
+This README provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf) as provided within this project.
 
 # Liabilities
 
@@ -42,17 +42,17 @@ It is recommended but not necessary to start MTA before the market opens.
 
 # MTA input and output files
 
-As detailed in the User Manual, MTA requires five files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only DailyTradingPlan.xlsx  contains your daily trading plan and needs to be updated daily. The input files are:
+As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires five files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only DailyTradingPlan.xlsx  contains your daily trading plan and needs to be updated daily. The input files are:
 
-  - main.py
+  - [main.py](/main.py)
 
-  - MyOrders.py
+  - [MyOrders.py](/MyOrders.py)
 
-  - MyUtilities.py
+  - [MyUtilities.py](/MyUtilities.py)
 
-  - tickDataTemplate.xlsx
+  - [tickDataTemplate.xlsx](/tickDataTemplate.xlsx)
 
-  - DailyTradingPlan.xlsx (resp. DailyTradingPlan_DE.xlsx or DailyTradingPlan_JP.xlsx)
+  - [DailyTradingPlan.xlsx](/DailyTradingPlan.xlsx) (resp. DailyTradingPlan_DE.xlsx or DailyTradingPlan_JP.xlsx)
 
 
 
@@ -82,7 +82,7 @@ Afterwards, an extract of your DailyTradingPlan will be printed and you will be 
 
 ![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2)
 
-Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be 0 < x < ∞ and therefore can also be used for a margin account. Please see further information on the significance of this value in the User Manual.
+Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be 0 < x < ∞ and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf).
 
 ![image](https://github.com/user-attachments/assets/c4df87a1-9e76-447d-a6b2-5dda474f04d4)
 
@@ -134,5 +134,5 @@ Your feedback as well as contribution is most welcome. This project shall serve 
 
 # Software support
 
-If you encounter any errors or uncertainties resp. ambiguities towards MTA’s usage, please feel free to come back to me any time in case I did not cover this topic in the user manual.
+If you encounter any errors or uncertainties resp. ambiguities towards MTA’s usage, please feel free to come back to me any time in case I did not cover this topic in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf).
 
