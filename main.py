@@ -3,7 +3,6 @@ import argparse
 import datetime
 import collections
 import inspect
-import sys
 from decimal import Decimal
 
 import threading
@@ -52,7 +51,7 @@ which_markets_to_trade = input("\nDo you want to trade New York [NY], Japan [JP]
 if which_markets_to_trade == "JP":
     market_has_pause = True
     TIMEZONE = "Japan"
-    EXR_RATE = 150   # YEN per USD
+    EXR_RATE = 150  # YEN per USD
     NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan_JP.xlsx"
     NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan_JP.xlsx"
     NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions_JP.xlsx"
@@ -61,7 +60,7 @@ if which_markets_to_trade == "JP":
 elif which_markets_to_trade == "NY":
     market_has_pause = False
     TIMEZONE = "America/New_York"
-    EXR_RATE = 1   # USD per USD
+    EXR_RATE = 1  # USD per USD
     NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan.xlsx"
     NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan.xlsx"
     NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions.xlsx"
@@ -70,12 +69,15 @@ elif which_markets_to_trade == "NY":
 elif which_markets_to_trade == "DE":
     market_has_pause = False
     TIMEZONE = "Europe/Berlin"
-    EXR_RATE = 0.91   # EUR per USD
+    EXR_RATE = 0.91  # EUR per USD
     NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan_DE.xlsx"
     NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan_DE.xlsx"
     NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions_DE.xlsx"
     NAME_OF_FETCHDATA_OPEN_SAVE = "_fetch_open_positions_DE.xlsx"
     CLIENT_ID = 33
+else:
+    print("Please restart the program and provide a valid entry.")
+    exit()
 
 # Variables are defined here
 market_opening = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
@@ -112,7 +114,7 @@ last_orderStatus_message = {}
 iOList = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 tickData = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
 
-iOList, tickData = MyUtilities.dataFrameCleanUp(iOList, tickData, return_both_dataframes = True)
+iOList, tickData = MyUtilities.data_frame_clean_up(iOList, tickData, return_both_dataframes=True)
 
 iOList = MyUtilities.document_trading_parameters(iOList, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE,
                                                  SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE, MAX_ALLOWED_DAILY_PNL_LOSS,
@@ -129,8 +131,8 @@ open_positions_iOList = open_positions_iOList.iloc[0:0]
 # Prints current time in NY to confirm that there are no bugs conc. timezones considered
 print("\n", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)))
 
-# Prints iOList for reference and double-check
-print("\n", iOList.iloc[:, [0,6,7,8,10,11]])
+# Prints io_list for reference and double-check
+print("\n", iOList.iloc[:, [0, 6, 7, 8, 10, 11]])
 
 # Ends the program when it is not confirmed that the DailyTradingPlan has been updated
 dailyPlanUpdated = input("\nHave you updated the DailyTradingPlan on the server? [y/n]\n")
@@ -140,6 +142,7 @@ if dailyPlanUpdated != "y":
 # Defines daily investment limits
 invested_max = int(input("\nWhat is your maximum you want to go in the market today [%]?\n"))
 percent_invested_max = invested_max / 100
+
 
 def SetupLogger():
     if not os.path.exists("log"):
@@ -174,11 +177,16 @@ def printWhenExecuting(fn):
 
 def printinstance(inst: Object):
     attrs = vars(inst)
-    # print(', '.join('{}:{}'.format(key, decimalMaxString(value) if type(value) is Decimal else value) for key, value in attrs.items()))
-    print(', '.join('{}:{}'.format(key, decimalMaxString(value) if type(value) is Decimal else
-    floatMaxString(value) if type(value) is float else
-    intMaxString(value) if type(value) is int else
-    value) for key, value in attrs.items()))
+    print(', '.join(
+        '{}:{}'.format(
+            key,
+            decimalMaxString(value) if type(value) is Decimal else
+            floatMaxString(value) if type(value) is float else
+            intMaxString(value) if type(value) is int else
+            value
+        )
+        for key, value in attrs.items()
+    ))
 
 
 class Activity(Object):
@@ -236,7 +244,7 @@ class TestClient(EClient):
                 sig = inspect.signature(meth)
                 for (idx, pnameNparam) in enumerate(sig.parameters.items()):
                     (paramName, param) = pnameNparam  # @UnusedVariable
-                    if paramName == "reqId":
+                    if paramName == "req_id":
                         self.clntMeth2reqIdIdx[methName] = idx
 
                 setattr(TestClient, methName, self.countReqId(methName, meth))
@@ -277,7 +285,7 @@ class TestWrapper(wrapper.EWrapper):
             for (idx, pnameNparam) in enumerate(sig.parameters.items()):
                 (paramName, param) = pnameNparam  # @UnusedVariable
                 # we want to count the errors as 'error' not 'answer'
-                if 'error' not in methName and paramName == "reqId":
+                if 'error' not in methName and paramName == "req_id":
                     self.wrapMeth2reqIdIdx[methName] = idx
 
             setattr(TestWrapper, methName, self.countWrapReqId(methName, meth))
@@ -387,7 +395,7 @@ class TestApp(TestWrapper, TestClient):
         else:
             print("Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
 
-    # ! [error] self.reqId2nErr[reqId] += 1
+    # ! [error] self.reqId2nErr[req_id] += 1
 
     @iswrapper
     def winError(self, text: str, lastError: int):
@@ -419,7 +427,7 @@ class TestApp(TestWrapper, TestClient):
             "ParentId": parentId,
         }
 
-        if markets_are_open == True and current_message != last_orderStatus_message:
+        if markets_are_open and current_message != last_orderStatus_message:
             print("Order Status - Order ID:", orderId, "Status:", status, "Filled:", decimalMaxString(filled),
                   "Remaining:", decimalMaxString(remaining), "AvgFillPrice:", floatMaxString(avgFillPrice),
                   "Parent ID:", parentId,
@@ -427,8 +435,8 @@ class TestApp(TestWrapper, TestClient):
 
             last_orderStatus_message = current_message.copy()
 
-        iOList = MyUtilities.update_iOList_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
-                                                                  iOList, TIMEZONE)
+        iOList = MyUtilities.update_io_list_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
+                                                                   iOList, TIMEZONE)
 
     # ! [orderstatus]
 
@@ -516,7 +524,6 @@ class TestApp(TestWrapper, TestClient):
 
                 # Only updates if something has changed (beware the units)
                 if abs(percent_invested - percent_invested_last) * 100 > PORTFOLIO_UPDATE_PRINTS:
-
                     print("\nYour portfolio size is", round(portfolio_size, 0), "$. (",
                           datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
 
@@ -533,10 +540,9 @@ class TestApp(TestWrapper, TestClient):
 
         if (key == "RealizedPnL" and currency == "BASE") or (key == "UnrealizedPnL" and currency == "BASE"):
             max_daily_loss_reached, realized_PnL_percent_last, unrealized_PnL_percent_last = (
-                MyUtilities.update_daily_PnL(portfolio_size, EXR_RATE, realized_PnL, realized_PnL_percent_last,
+                MyUtilities.update_daily_pnl(portfolio_size, EXR_RATE, realized_PnL, realized_PnL_percent_last,
                                              unrealized_PnL, unrealized_PnL_percent_last, MAX_ALLOWED_DAILY_PNL_LOSS,
                                              max_daily_loss_reached, TIMEZONE, PORTFOLIO_UPDATE_PRINTS))
-
 
     # ! [updateaccountvalue]
 
@@ -558,7 +564,6 @@ class TestApp(TestWrapper, TestClient):
         super().position(account, contract, position, avgCost)
 
         if open_positions_check_done == False:
-
             print("Position.", "Account:", account, "Symbol:", contract.symbol, "SecType:",
                   contract.secType, "Currency:", contract.currency,
                   "Position:", decimalMaxString(position), "Avg cost:", floatMaxString(avgCost))
@@ -640,7 +645,6 @@ class TestApp(TestWrapper, TestClient):
         time_now_str = time_now.strftime("%H:%M:%S")
 
         if time_now > time_algo_starts + datetime.timedelta(minutes=1) and open_positions_check_done == False:
-
             MyUtilities.compare_positions_currency_specific(open_positions_iOList, iOList)
 
             open_positions_check_done = True
@@ -652,22 +656,23 @@ class TestApp(TestWrapper, TestClient):
                 market_opening_hours_defined = True
                 print("\nMarket opening hours are defined.\n")
 
-        if market_opening_hours_defined == True and \
-            (
-                    (market_close > time_now > market_opening and market_has_pause == False)
-                    or \
-                    (
-                            (market_pause_start > time_now > market_opening or market_close > time_now > market_pause_end)
-                            and market_has_pause == True
-                    )
-            ):
+        if market_opening_hours_defined and \
+                (
+                        (market_close > time_now > market_opening and market_has_pause == False)
+                        or
+                        (
+                                (market_pause_start > time_now > market_opening or
+                                 market_close > time_now > market_pause_end)
+                                and market_has_pause
+                        )
+                ):
 
             markets_are_open = True
         else:
             markets_are_open = False
 
         # Triggers only once when markets just opened
-        if market_opening_hours_defined == True and markets_are_open == True and previous_markets_are_open == False:
+        if market_opening_hours_defined and markets_are_open and previous_markets_are_open == False:
             update_DailyTradingPlan_timestamp = time_now
             print("\n##################################################################")
             print("\nDingDingDing - Markets are open!\n")
@@ -677,7 +682,7 @@ class TestApp(TestWrapper, TestClient):
             iOList[columns_to_clear] = np.nan
 
         # Triggers only once when markets just closed
-        if previous_markets_are_open == True and markets_are_open == False:
+        if previous_markets_are_open and markets_are_open == False:
             print("\n##################################################################")
             print("\nMarkets are closed.\n")
             print("##################################################################\n")
@@ -711,7 +716,7 @@ class TestApp(TestWrapper, TestClient):
                 iOList.loc[reqId, 'LOW price [$]'] = price
 
         # Start function fetch_stock_data() only once
-        if fetch_data_triggered == False and markets_are_open == True:
+        if fetch_data_triggered == False and markets_are_open:
             fetch_stock_data_thread = threading.Thread(target=self.fetch_stock_data, daemon=False)
             fetch_stock_data_thread.start()
             fetch_data_triggered = True
@@ -720,21 +725,21 @@ class TestApp(TestWrapper, TestClient):
         if market_opening_hours_defined == False:
             return
 
-        if market_has_pause == False or (market_has_pause == True and time_now < market_opening):
+        if market_has_pause == False or (market_has_pause and time_now < market_opening):
             minutes_to_market_open = (market_opening - time_now).total_seconds() / 60
-        elif market_has_pause == True and time_now > market_opening:
+        elif market_has_pause and time_now > market_opening:
             minutes_to_market_open = (market_pause_end - time_now).total_seconds() / 60
 
         # Place brackets around open positions
-        if daily_brackets_submitted == False and market_opening_hours_defined == True and \
-                iOList['Open position'][reqId] == True and iOList['Open position bracket submitted'][reqId] == False:
+        if daily_brackets_submitted == False and market_opening_hours_defined and \
+                iOList['Open position'][reqId] and iOList['Open position bracket submitted'][reqId] == False:
 
             # Cancels all open orders every time the algo is started if the market opening is only some minutes away
-            # Note that this only happens if there are open positions in iOList
+            # Note that this only happens if there are open positions in io_list
             if all_orders_cancelled == False and minutes_to_market_open < 15:
 
-                for id in old_orderids:
-                    self.cancelOrder(int(id), "")
+                for old_id in old_orderids:
+                    self.cancelOrder(int(old_id), "")
 
                 all_orders_cancelled = True
 
@@ -743,16 +748,15 @@ class TestApp(TestWrapper, TestClient):
                 return
 
             # Bracket shall immediately be placed when last price is within -1% or above of defined stop
-            if markets_are_open == True and iOList['LAST price [$]'][reqId] > iOList['Stop price [$]'][
-                reqId] * 0.99:
+            if markets_are_open and iOList['LAST price [$]'][reqId] > iOList['Stop price [$]'][reqId] * 0.99:
                 # Place new OCA profit taker and stop loss
                 contract = MyUtilities.get_contract_details(iOList, reqId)
-                totalQuantity = round(iOList['Quantity [#]'][reqId], 0)
-                lmtPrice = round(iOList['Profit taker price [$]'][reqId], 2)
-                auxPrice = round(iOList['Stop price [$]'][reqId], 2)
-                OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, reqId,
-                                                     TIMEZONE, ib_timezone_str, market_close, iOList)
-                for o in OCA:
+                total_quantity = round(iOList['Quantity [#]'][reqId], 0)
+                lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
+                aux_price = round(iOList['Stop price [$]'][reqId], 2)
+                oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                       TIMEZONE, ib_timezone_str, market_close, iOList)
+                for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
 
@@ -762,15 +766,15 @@ class TestApp(TestWrapper, TestClient):
                       f"( {time_now_str} )")
 
             # If price gaps below -1% from buy price and stock iterates the first time:
-            elif markets_are_open == True and iOList["Stop timestamp"][reqId] == "":
+            elif markets_are_open and iOList["Stop timestamp"][reqId] == "":
                 iOList.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
-                iOList.loc[reqId, "Last stop price"]= iOList["LAST price [$]"][reqId]
+                iOList.loc[reqId, "Last stop price"] = iOList["LAST price [$]"][reqId]
                 iOList.loc[reqId, 'Stock looped'] = True
                 print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} gapped below -1% from buy price - we wait 4 secs."
                       f"( {time_now_str} )")
 
             # If price gaps below -1% from buy price and stock iterates further:
-            elif markets_are_open == True and iOList["Stop timestamp"][reqId] <= \
+            elif markets_are_open and iOList["Stop timestamp"][reqId] <= \
                     datetime.datetime.now(tz=None) - datetime.timedelta(seconds=4):
 
                 # If stock continues to sink within last 4 seconds, sell order is placed
@@ -778,9 +782,9 @@ class TestApp(TestWrapper, TestClient):
 
                     # Shoot market sell order
                     contract = MyUtilities.get_contract_details(iOList, reqId)
-                    totalQuantity = round(iOList['Quantity [#]'][reqId], 0)
+                    total_quantity = round(iOList['Quantity [#]'][reqId], 0)
                     orderId = self.nextOrderId()
-                    order = MyOrders.sellMarketOrder(orderId, totalQuantity)
+                    order = MyOrders.sell_market_order(orderId, total_quantity)
                     self.placeOrder(order.orderId, contract, order)
 
                     iOList.loc[reqId, 'Open position bracket submitted'] = True
@@ -808,16 +812,15 @@ class TestApp(TestWrapper, TestClient):
             if (
                     minutes_to_market_open > 15 and market_open_print_timestamp + datetime.timedelta(minutes=15)
                     < time_now
-                ) or \
-                (
-                    15 >= minutes_to_market_open > 2 and market_open_print_timestamp + datetime.timedelta(minutes=3)
-                    < time_now
-                ) or \
-                (
-                    2 >= minutes_to_market_open and market_open_print_timestamp + datetime.timedelta(seconds=30)
-                    < time_now
-                ):
-
+            ) or \
+                    (
+                            15 >= minutes_to_market_open > 2 and
+                            market_open_print_timestamp + datetime.timedelta(minutes=3) < time_now
+                    ) or \
+                    (
+                            2 >= minutes_to_market_open and market_open_print_timestamp + datetime.timedelta(seconds=30)
+                            < time_now
+                    ):
                 print(f"\nMarkets not open. ( {time_now_str} )")
 
                 market_open_print_timestamp = time_now
@@ -849,25 +852,27 @@ class TestApp(TestWrapper, TestClient):
             update_DailyTradingPlan_timestamp = time_now
 
             try:
-                iOListUpdate = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
+                io_list_update = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 
             except PermissionError:
-                print(f"Did not get permission to read DailyTradingPlan. Will try again in some secs. ( {time_now_str} )")
+                print(
+                    f"Did not get permission to read DailyTradingPlan. Will try again in some secs. ( {time_now_str} )")
                 success_reading_xls = False
 
-            if success_reading_xls == True:
+            if success_reading_xls:
                 # Applies the necessary datatypes again
-                iOListUpdate = MyUtilities.dataFrameCleanUp(iOListUpdate, tickData, return_both_dataframes=False)
+                io_list_update = MyUtilities.data_frame_clean_up(io_list_update, tickData, return_both_dataframes=False)
 
-                for j in range(len(iOListUpdate)):
+                for j in range(len(io_list_update)):
 
                     # Adding new positions
-                    # Must come first to avoid errors due to index i exceeding len(iOList)
+                    # Must come first to avoid errors due to index j exceeding len(io_list)
                     if j >= len(iOList):
 
-                        # Adds the new row to iOList and iOListCopyForTickData for fetching function
-                        iOList = pd.concat([iOList, iOListUpdate.iloc[[j]]], ignore_index=True)
-                        iOListCopyForTickData = pd.concat([iOListCopyForTickData, iOListUpdate.iloc[[j]]], ignore_index=True)
+                        # Adds the new row to io_list and iOListCopyForTickData for fetching function
+                        iOList = pd.concat([iOList, io_list_update.iloc[[j]]], ignore_index=True)
+                        iOListCopyForTickData = pd.concat([iOListCopyForTickData, io_list_update.iloc[[j]]],
+                                                          ignore_index=True)
 
                         # Requests contract details and market data
                         contract = MyUtilities.get_contract_details(iOList, j)
@@ -881,51 +886,48 @@ class TestApp(TestWrapper, TestClient):
                         iOList.loc[j, 'New position added [time]'] = time_now_str
 
                     # Updating open positions or filled new positions
-                    elif \
-                        (
-                            (iOList['Open position'][j] == False and iOList['Order filled'][j] == True and
-                            iOList['Stock sold'][j] == False)
-                            or
-                            (iOList['Open position'][j] == True and
-                            iOList['Open position bracket submitted'][j] == True and iOList['Stock sold'][j] == False)
-                        ) and \
-                        (
-                            iOListUpdate['Stop price [$]'][j] != iOList['Stop price [$]'][j] or
-                            iOListUpdate['Profit taker price [$]'][j] != iOList['Profit taker price [$]'][j] or
-                            iOListUpdate['Quantity [#]'][j] < iOList['Quantity [#]'][j]
-                        ):
+                    elif (
+                            (iOList['Open position'][j] == False and iOList['Order filled'][j] and
+                             iOList['Stock sold'][j] == False)
+                            or (
+                                    iOList['Open position'][j] and
+                                    iOList['Open position bracket submitted'][j] and iOList['Stock sold'][j] == False
+                            )) and (
+                            io_list_update['Stop price [$]'][j] != iOList['Stop price [$]'][j] or
+                            io_list_update['Profit taker price [$]'][j] != iOList['Profit taker price [$]'][j] or
+                            io_list_update['Quantity [#]'][j] < iOList['Quantity [#]'][j]
+                    ):
 
-                        if iOList['Open position'][j] == False and iOList['Stop low of day'][j] == True and \
-                                iOListUpdate['Stop price [$]'][j] != iOList['Stop price [$]'][j]:
+                        if iOList['Open position'][j] == False and iOList['Stop low of day'][j] and \
+                                io_list_update['Stop price [$]'][j] != iOList['Stop price [$]'][j]:
                             print(
                                 f"\n### ATTENTION #### Stock ID: {j} {iOList['Symbol'][j]} - You are overwriting stop "
                                 f"at the low of the day of {iOList['Stop price [$]'][j]} with a new stop price of "
-                                f"{iOListUpdate['Stop price [$]'][j]}. ( {time_now_str} )")
+                                f"{io_list_update['Stop price [$]'][j]}. ( {time_now_str} )")
 
-                        iOList.loc[j, 'Stop price [$]'] = iOListUpdate['Stop price [$]'][j]
-                        iOList.loc[j, 'Profit taker price [$]'] = iOListUpdate['Profit taker price [$]'][j]
+                        iOList.loc[j, 'Stop price [$]'] = io_list_update['Stop price [$]'][j]
+                        iOList.loc[j, 'Profit taker price [$]'] = io_list_update['Profit taker price [$]'][j]
 
                         # Cancel current bracket oder
                         self.cancelOrder(int(iOList['profitOrderId'][j]), "")
 
                         # Only required if the quantity is trimmed
-                        if iOListUpdate['Quantity [#]'][j] < iOList['Quantity [#]'][j]:
-
+                        if io_list_update['Quantity [#]'][j] < iOList['Quantity [#]'][j]:
                             # Shoot market sell order
                             contract = MyUtilities.get_contract_details(iOList, j)
-                            totalQuantity = round(iOList['Quantity [#]'][j] - iOListUpdate['Quantity [#]'][j], 0)
-                            order = MyOrders.sellMarketOrder(self.nextOrderId(), totalQuantity)
+                            total_quantity = round(iOList['Quantity [#]'][j] - io_list_update['Quantity [#]'][j], 0)
+                            order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
                             self.placeOrder(order.orderId, contract, order)
-                            iOList.loc[j, 'Quantity [#]'] = iOListUpdate['Quantity [#]'][j]
+                            iOList.loc[j, 'Quantity [#]'] = io_list_update['Quantity [#]'][j]
 
                         # Place new OCA profit taker with adjusted stop loss
                         contract = MyUtilities.get_contract_details(iOList, j)
-                        totalQuantity = round(iOList['Quantity [#]'][j], 0)
-                        lmtPrice = round(iOList['Profit taker price [$]'][j], 2)
-                        auxPrice = round(iOList['Stop price [$]'][j], 2)
-                        OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, j,
-                                                             TIMEZONE, ib_timezone_str, market_close, iOList)
-                        for o in OCA:
+                        total_quantity = round(iOList['Quantity [#]'][j], 0)
+                        lmt_price = round(iOList['Profit taker price [$]'][j], 2)
+                        aux_price = round(iOList['Stop price [$]'][j], 2)
+                        oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price,
+                                                               j, TIMEZONE, ib_timezone_str, market_close, iOList)
+                        for o in oca:
                             self.placeOrder(o.orderId, contract, o)
                             self.nextOrderId()
 
@@ -937,19 +939,19 @@ class TestApp(TestWrapper, TestClient):
 
                     # Updating new positions that did not execute
                     elif iOList['Open position'][j] == False and iOList['Crossed buy price'][j] == False and \
-                        (
-                                iOListUpdate['Entry price [$]'][j] != iOList['Entry price [$]'][j] or
-                                iOListUpdate['Stop price [$]'][j] != iOList['Stop price [$]'][j] or
-                                iOListUpdate['Quantity [#]'][j] != iOList['Quantity [#]'][j] or
-                                iOListUpdate['Buy limit price [$]'][j] != iOList['Buy limit price [$]'][j] or
-                                iOListUpdate['Profit taker price [$]'][j] != iOList['Profit taker price [$]'][j]
-                        ):
+                            (
+                                    io_list_update['Entry price [$]'][j] != iOList['Entry price [$]'][j] or
+                                    io_list_update['Stop price [$]'][j] != iOList['Stop price [$]'][j] or
+                                    io_list_update['Quantity [#]'][j] != iOList['Quantity [#]'][j] or
+                                    io_list_update['Buy limit price [$]'][j] != iOList['Buy limit price [$]'][j] or
+                                    io_list_update['Profit taker price [$]'][j] != iOList['Profit taker price [$]'][j]
+                            ):
 
-                        iOList.loc[j, 'Entry price [$]'] = iOListUpdate['Entry price [$]'][j]
-                        iOList.loc[j, 'Stop price [$]'] = iOListUpdate['Stop price [$]'][j]
-                        iOList.loc[j, 'Quantity [#]'] = iOListUpdate['Quantity [#]'][j]
-                        iOList.loc[j, 'Buy limit price [$]'] = iOListUpdate['Buy limit price [$]'][j]
-                        iOList.loc[j, 'Profit taker price [$]'] = iOListUpdate['Profit taker price [$]'][j]
+                        iOList.loc[j, 'Entry price [$]'] = io_list_update['Entry price [$]'][j]
+                        iOList.loc[j, 'Stop price [$]'] = io_list_update['Stop price [$]'][j]
+                        iOList.loc[j, 'Quantity [#]'] = io_list_update['Quantity [#]'][j]
+                        iOList.loc[j, 'Buy limit price [$]'] = io_list_update['Buy limit price [$]'][j]
+                        iOList.loc[j, 'Profit taker price [$]'] = io_list_update['Profit taker price [$]'][j]
 
                         print(f"\nStock ID: {j} {iOList['Symbol'][j]} - New position data is updated acc. to new plan."
                               f"( {time_now_str} )")
@@ -974,26 +976,26 @@ class TestApp(TestWrapper, TestClient):
         # Sets marker if stock is sold for open positions and new positions
         if (
                 (
-                        iOList['Open position'][reqId] == True or
-                        (iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] == True)
+                        iOList['Open position'][reqId] or
+                        (iOList['Open position'][reqId] == False and iOList['Order filled'][reqId])
                 ) and
                 iOList['Stock sold'][reqId] == False
         ) and \
                 (
-                        iOList['Profit order filled'][reqId] == True or iOList['Stop order filled'][
-                    reqId] == True or
-                        iOList['SOC order filled'][reqId] == True
+                        iOList['Profit order filled'][reqId] or iOList['Stop order filled'][reqId] or
+                        iOList['SOC order filled'][reqId]
                 ):
             iOList.loc[reqId, 'Stock sold'] = True
             iOList.loc[reqId, 'Stock sold [time]'] = time_now_str
 
         # Only continues if all relevant data points are defined and parameters given
         if pd.isnull(percent_invested) or pd.isnull(portfolio_size) or \
-                iOList['Position below limit'][reqId] == True or iOList['Max. daily loss reached'][reqId] == True:
+                iOList['Position below limit'][reqId] or iOList['Max. daily loss reached'][reqId]:
             return
 
         # When buy price is crossed and field is still empty means crosses the price the first time
-        # Two-step entries are excluded, but OR grants access within first minute to check on lower spread/ price to enter
+        # Two-step entries are excluded, but OR grants access within first minute to check on lower spread/ price
+        # to enter
 
         if (
                 iOList['LAST price [$]'][reqId] > iOList['Entry price [$]'][reqId] and
@@ -1001,10 +1003,8 @@ class TestApp(TestWrapper, TestClient):
                 iOList['Order executed'][reqId] == False
         ) or \
                 (
-                        iOList['Crossed buy price'][reqId] == True and iOList['Order executed'][
-                    reqId] == False and
-                        time_now < market_opening
-                        + datetime.timedelta(minutes=1)
+                        iOList['Crossed buy price'][reqId] and iOList['Order executed'][reqId] == False and
+                        time_now < market_opening + datetime.timedelta(minutes=1)
                 ):
 
             # Marks "crossed buy price" only once
@@ -1020,15 +1020,15 @@ class TestApp(TestWrapper, TestClient):
 
                 # Reduces the size of the position to stay within the investment limit
                 iOList.loc[reqId, 'Quantity [#]'] = math.floor(
-                    (percent_invested_max - percent_invested) * portfolio_size \
+                    (percent_invested_max - percent_invested) * portfolio_size
                     / (iOList['Entry price [$]'][reqId] / EXR_RATE))
 
                 iOList.loc[reqId, 'Invest limit reached'] = True
                 iOList.loc[reqId, 'Invest limit reached [time]'] = time_now_str
 
                 # Very small resulting positions shall not be traded
-                if iOList['Quantity [#]'][reqId] * iOList['Entry price [$]'][
-                    reqId] < MIN_POSITION_SIZE * portfolio_size:
+                if iOList['Quantity [#]'][reqId] * iOList['Entry price [$]'][reqId] \
+                        < MIN_POSITION_SIZE * portfolio_size:
                     iOList.loc[reqId, 'Position below limit'] = True
                     print(
                         f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} would exceed my daily investment limit - "
@@ -1040,14 +1040,14 @@ class TestApp(TestWrapper, TestClient):
                       f"Position size has been reduced. ( {time_now_str} )")
 
             # Terminates all buying if daily loss limit is reached
-            if max_daily_loss_reached == True:
+            if max_daily_loss_reached:
                 iOList.loc[reqId, 'Max. daily loss reached'] = True
                 iOList.loc[reqId, 'Max. daily loss reached [time]'] = time_now_str
                 print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} not executed - daily max. loss of "
                       f"{round(MAX_ALLOWED_DAILY_PNL_LOSS * 100, 1)}% is reached. ( {time_now_str} ")
                 return
 
-            stock_spread = abs((iOList['ASK price [$]'][reqId] - iOList['BID price [$]'][reqId]) \
+            stock_spread = abs((iOList['ASK price [$]'][reqId] - iOList['BID price [$]'][reqId])
                                / iOList['ASK price [$]'][reqId])
             iOList.loc[reqId, 'Spread at execution [%]'] = round(stock_spread * 100, 2)
 
@@ -1097,14 +1097,14 @@ class TestApp(TestWrapper, TestClient):
 
                 # Blocks execution of buy order shortly before market close for "sell on close" stock
                 # 15 minutes since at t-8min the brackets got replaced and t-5min the sells are done
-                if time_now > market_close - (datetime.timedelta(minutes=15)) and iOList['Sell on close'][reqId] == True:
+                if time_now > market_close - (datetime.timedelta(minutes=15)) and iOList['Sell on close'][reqId]:
                     print(
                         f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} will be sold on close - buy not executed."
                         f"( {time_now_str} )")
 
                     return
 
-                if iOList['Stop low of day'][reqId] == True and\
+                if iOList['Stop low of day'][reqId] and \
                         iOList['LOW price [$]'][reqId] > iOList['Stop price [$]'][reqId]:
 
                     # Ensures a min. -1% stop
@@ -1123,8 +1123,8 @@ class TestApp(TestWrapper, TestClient):
                                                              NAME_OF_DAILYTRADINGPLAN)
 
                 contract = MyUtilities.get_contract_details(iOList, reqId)
-                bracket, iOList = MyOrders.bracketOrder(self.nextOrderId(), reqId, TIMEZONE, ib_timezone_str,
-                                                        market_close, iOList)
+                bracket, iOList = MyOrders.bracket_order(self.nextOrderId(), reqId, TIMEZONE, ib_timezone_str,
+                                                         market_close, iOList)
                 for o in bracket:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
@@ -1134,17 +1134,17 @@ class TestApp(TestWrapper, TestClient):
 
         # Add & reduce function
         # Increases the stop of all open positions when additional shares are added
-        if daily_brackets_submitted == True and iOList['Add and reduce'][reqId] == True and \
-                iOList['Add and reduce executed'][reqId] == False and iOList['Order filled'][reqId] == True:
+        if daily_brackets_submitted and iOList['Add and reduce'][reqId] and \
+                iOList['Add and reduce executed'][reqId] == False and iOList['Order filled'][reqId]:
 
             for i in range(len(iOList)):
                 if (
                         (
-                                iOList['Open position'][i] == False and iOList['Order filled'][i] == True and
+                                iOList['Open position'][i] == False and iOList['Order filled'][i] and
                                 iOList['Stock sold'][i] == False
                         ) or
                         (
-                                iOList['Open position'][i] == True and iOList['Stock sold'][i] == False
+                                iOList['Open position'][i] and iOList['Stock sold'][i] == False
                         )
                 ) and iOList['Symbol'][i] == iOList['Symbol'][reqId]:
 
@@ -1153,20 +1153,20 @@ class TestApp(TestWrapper, TestClient):
 
                     # Place new OCA profit taker with adjusted stop loss
                     contract = MyUtilities.get_contract_details(iOList, i)
-                    totalQuantity = round(iOList['Quantity [#]'][i], 0)
-                    lmtPrice = round(iOList['Profit taker price [$]'][i], 2)
-                    auxPrice = round(iOList['Stop price [$]'][reqId], 2)
-                    OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, i,
-                                                         TIMEZONE, ib_timezone_str, market_close, iOList)
-                    for o in OCA:
+                    total_quantity = round(iOList['Quantity [#]'][i], 0)
+                    lmt_price = round(iOList['Profit taker price [$]'][i], 2)
+                    aux_price = round(iOList['Stop price [$]'][reqId], 2)
+                    oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, i,
+                                                           TIMEZONE, ib_timezone_str, market_close, iOList)
+                    for o in oca:
                         self.placeOrder(o.orderId, contract, o)
                         self.nextOrderId()
 
-                    # Changes stop price in iOList
-                    iOList.loc[i, 'Stop price [$]'] = auxPrice
+                    # Changes stop price in io_list
+                    iOList.loc[i, 'Stop price [$]'] = aux_price
 
                     # Changes stop price in DailyTradingPlan
-                    MyUtilities.dailytradingplan_stop_update(i, auxPrice, NAME_OF_DAILYTRADINGPLAN)
+                    MyUtilities.dailytradingplan_stop_update(i, aux_price, NAME_OF_DAILYTRADINGPLAN)
 
                     print(f"\nStock ID: {i} {iOList['Symbol'][i]} - Add and reduce executed. ( {time_now_str} )")
 
@@ -1174,7 +1174,7 @@ class TestApp(TestWrapper, TestClient):
 
         # Sells half of positions if stock is increasing X% over buy point and coming back in to b/e
         # First, marker to be set if buy price increases X% after buy (see SELL_HALF_REVERSAL_RULE)
-        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] == True and \
+        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] and \
                 iOList['2% above buy point'][reqId] == False and \
                 iOList['LAST price [$]'][reqId] > iOList['Entry price [$]'][reqId] * (
                 1 + SELL_HALF_REVERSAL_RULE):
@@ -1189,8 +1189,8 @@ class TestApp(TestWrapper, TestClient):
 
         # Second, if stock comes in again to b/o level, 50% must be sold, bracket cancelled
         # New OCA profit taker and stop loss to be set for 50% of quantity
-        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] == True and \
-                iOList['2% above buy point'][reqId] == True and iOList['New OCA bracket'][reqId] == False and \
+        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] and \
+                iOList['2% above buy point'][reqId] and iOList['New OCA bracket'][reqId] == False and \
                 iOList['Stock sold'][reqId] == False and iOList['5% above buy point'][reqId] == False and \
                 iOList['LAST price [$]'][reqId] <= \
                 iOList['Entry price [$]'][reqId] * (1 + iOList['Spread at execution [%]'][reqId] / 100) and \
@@ -1201,8 +1201,8 @@ class TestApp(TestWrapper, TestClient):
 
             # Shoot market sell order for 50%
             contract = MyUtilities.get_contract_details(iOList, reqId)
-            totalQuantity = math.ceil(round(iOList['Quantity [#]'][reqId], 0) / 2)
-            order = MyOrders.sellMarketOrder(self.nextOrderId(), totalQuantity)
+            total_quantity = math.ceil(round(iOList['Quantity [#]'][reqId], 0) / 2)
+            order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
             self.placeOrder(order.orderId, contract, order)
 
             print(
@@ -1210,21 +1210,21 @@ class TestApp(TestWrapper, TestClient):
                 f"above buy price and came in to B/O level - sold half. ( {time_now_str} )")
 
             # Place new OCA profit taker and stop loss for 50% quantity
-            totalQuantity = math.floor(round(iOList['Quantity [#]'][reqId], 0) / 2)
-            lmtPrice = round(iOList['Profit taker price [$]'][reqId], 2)
-            auxPrice = round(iOList['Stop price [$]'][reqId], 2)
-            OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, reqId, TIMEZONE,
-                                                 ib_timezone_str, market_close, iOList)
-            for o in OCA:
+            total_quantity = math.floor(round(iOList['Quantity [#]'][reqId], 0) / 2)
+            lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
+            aux_price = round(iOList['Stop price [$]'][reqId], 2)
+            oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+            for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
             iOList.loc[reqId, 'New OCA bracket'] = True
             iOList.loc[reqId, 'New OCA bracket [time]'] = time_now_str
-            iOList.loc[reqId, 'Quantity [#]'] = totalQuantity
+            iOList.loc[reqId, 'Quantity [#]'] = total_quantity
 
         # Function increases stop to b/e if stock gained Y% over buy point
         # Marker to be set if buy price increases Y% after buy (see SELL_FULL_REVERSAL_RULE)
-        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] == True and \
+        if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] and \
                 iOList['Stock sold'][reqId] == False and iOList['5% above buy point'][reqId] == False and \
                 iOList['LAST price [$]'][reqId] > iOList['Entry price [$]'][reqId] * (
                 1 + SELL_FULL_REVERSAL_RULE):
@@ -1245,18 +1245,18 @@ class TestApp(TestWrapper, TestClient):
 
             # Place new OCA profit taker and stop loss with stop at B/E
             contract = MyUtilities.get_contract_details(iOList, reqId)
-            totalQuantity = round(iOList['Quantity [#]'][reqId], 0)
-            lmtPrice = round(iOList['Profit taker price [$]'][reqId], 2)
-            auxPrice = round(iOList['Entry price [$]'][reqId], 2)
-            OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, reqId, TIMEZONE,
-                                                 ib_timezone_str, market_close, iOList)
-            for o in OCA:
+            total_quantity = round(iOList['Quantity [#]'][reqId], 0)
+            lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
+            aux_price = round(iOList['Entry price [$]'][reqId], 2)
+            oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+            for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
             iOList.loc[reqId, 'Stop price [$]'] = iOList['Entry price [$]'][reqId]
 
             # Changes stop price in DailyTradingPlan
-            MyUtilities.dailytradingplan_stop_update(reqId, auxPrice, NAME_OF_DAILYTRADINGPLAN)
+            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, NAME_OF_DAILYTRADINGPLAN)
 
             print("\nStock ID:", reqId, iOList['Symbol'][reqId],
                   "increased", round(SELL_FULL_REVERSAL_RULE * 100, 1),
@@ -1265,16 +1265,16 @@ class TestApp(TestWrapper, TestClient):
 
         # SOC SMA Function: Cancels open orders and places new bracket without sell on close order
         if time_now > market_close - (datetime.timedelta(minutes=8)) and \
-                iOList['Stock sold'][reqId] == False and iOList['Sell on close'][reqId] == True and \
+                iOList['Stock sold'][reqId] == False and iOList['Sell on close'][reqId] and \
                 pd.notna(iOList['Sell bellow SMA [$]'][reqId]) and \
-                iOList['LAST price [$]'][reqId] > iOList['Stop price [$]'][reqId] and \
-                iOList['LAST price [$]'][reqId] < iOList['Profit taker price [$]'][reqId] and \
+                iOList['Profit taker price [$]'][reqId] > iOList['LAST price [$]'][reqId] > \
+                iOList['Stop price [$]'][reqId] and \
                 iOList['LAST price [$]'][reqId] > iOList['Sell bellow SMA [$]'][reqId] and \
                 (
                         (
-                                iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] == True
+                                iOList['Open position'][reqId] == False and iOList['Order filled'][reqId]
                         ) or
-                        iOList['Open position'][reqId] == True
+                        iOList['Open position'][reqId]
                 ):
 
             # Important so that he places a bracket without SOC order
@@ -1285,12 +1285,12 @@ class TestApp(TestWrapper, TestClient):
 
             # Place new bracket without GAT portion
             contract = MyUtilities.get_contract_details(iOList, reqId)
-            totalQuantity = round(iOList['Quantity [#]'][reqId], 0)
-            lmtPrice = round(iOList['Profit taker price [$]'][reqId], 2)
-            auxPrice = round(iOList['Stop price [$]'][reqId], 2)
-            OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, reqId, TIMEZONE,
-                                                 ib_timezone_str, market_close, iOList)
-            for o in OCA:
+            total_quantity = round(iOList['Quantity [#]'][reqId], 0)
+            lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
+            aux_price = round(iOList['Stop price [$]'][reqId], 2)
+            oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+            for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
 
@@ -1306,7 +1306,7 @@ class TestApp(TestWrapper, TestClient):
             iOList.loc[reqId, 'Bad close checked'] = True
 
             if iOList['Open position'][reqId] == False and \
-                    iOList['Order filled'][reqId] == True and iOList['Stock sold'][reqId] == False and \
+                    iOList['Order filled'][reqId] and iOList['Stock sold'][reqId] == False and \
                     iOList['Sell on close'][reqId] == False and pd.isnull(
                 iOList['Sell bellow SMA [$]'][reqId]) and \
                     iOList['5% above buy point'][reqId] == False and iOList['New OCA bracket'][
@@ -1322,24 +1322,24 @@ class TestApp(TestWrapper, TestClient):
 
                 # Shoot market sell order for 50%
                 contract = MyUtilities.get_contract_details(iOList, reqId)
-                totalQuantity = math.ceil(round(iOList['Quantity [#]'][reqId], 0) / 2)
-                order = MyOrders.sellMarketOrder(self.nextOrderId(), totalQuantity)
+                total_quantity = math.ceil(round(iOList['Quantity [#]'][reqId], 0) / 2)
+                order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
                 self.placeOrder(order.orderId, contract, order)
 
                 print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} attempts a bad close - sold half. "
                       f"( {time_now_str} )")
 
-                totalQuantity = math.floor(round(iOList['Quantity [#]'][reqId], 0) / 2)
-                lmtPrice = round(iOList['Profit taker price [$]'][reqId], 2)
-                auxPrice = round(iOList['Stop price [$]'][reqId], 2)
-                OCA, iOList = MyOrders.OneCancelsAll(self.nextOrderId(), totalQuantity, lmtPrice, auxPrice, reqId,
-                                                     TIMEZONE, ib_timezone_str, market_close, iOList)
-                for o in OCA:
+                total_quantity = math.floor(round(iOList['Quantity [#]'][reqId], 0) / 2)
+                lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
+                aux_price = round(iOList['Stop price [$]'][reqId], 2)
+                oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                       TIMEZONE, ib_timezone_str, market_close, iOList)
+                for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
                 iOList.loc[reqId, 'Bad close rule'] = True
                 iOList.loc[reqId, 'Bad close rule [time]'] = time_now_str
-                iOList.loc[reqId, 'Quantity [#]'] = totalQuantity
+                iOList.loc[reqId, 'Quantity [#]'] = total_quantity
 
     # ! [tickprice]
 
@@ -1347,7 +1347,7 @@ class TestApp(TestWrapper, TestClient):
     # ! [ticksize]
     def tickSize(self, reqId: TickerId, tickType: TickType, size: Decimal):
         super().tickSize(reqId, tickType, size)
-        # print("TickSize. TickerId:", reqId, "TickType:", tickType, "Size: ", decimalMaxString(size))
+        # print("TickSize. TickerId:", req_id, "TickType:", tickType, "Size: ", decimalMaxString(size))
         global iOList
         global iOListCopyForTickData
 
@@ -1369,10 +1369,9 @@ class TestApp(TestWrapper, TestClient):
     # ! [tickgeneric]
     def tickGeneric(self, reqId: TickerId, tickType: TickType, value: float):
         super().tickGeneric(reqId, tickType, value)
-        # print("TickGeneric. TickerId:", reqId, "TickType:", tickType, "Value:", floatMaxString(value))
+        # print("TickGeneric. TickerId:", req_id, "TickType:", tickType, "Value:", floatMaxString(value))
 
     # ! [tickgeneric]
-
 
     @printWhenExecuting
     def contractOperations(self):
@@ -1396,7 +1395,7 @@ class TestApp(TestWrapper, TestClient):
         # printinstance(contractDetails)
         time_delta_to_initialized_market = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - market_opening
 
-        # saves longName in iOList and prints it for checking
+        # saves longName in io_list and prints it for checking
         iOList.loc[reqId, 'Company name'] = contractDetails.longName
         print(f"\n {reqId} {iOList['Company name'][reqId]}")
 
@@ -1407,7 +1406,7 @@ class TestApp(TestWrapper, TestClient):
             if len(set(all_opening_hours)) > 2:
                 for i in range(len(all_opening_hours)):
                     if i > 1 and all_opening_hours[i] != all_opening_hours[i - 1]:
-                        input(f"{iOList['Company name'][i]} and {iOList['Company name'][i-1]} have different "
+                        input(f"{iOList['Company name'][i]} and {iOList['Company name'][i - 1]} have different "
                               f"market opening hours. You should end the program and adjust DailyTradingPlan.")
             else:
                 print("### Market opening hours are all identical. ###")
@@ -1427,10 +1426,12 @@ class TestApp(TestWrapper, TestClient):
             market_close = datetime.datetime.strptime(tradinghours_split_to_list[index_close], "%Y%m%d:%H%M")
             market_close = tz.normalize(tz.localize(market_close))
 
-            if market_has_pause == True:
-                market_pause_start = datetime.datetime.strptime(tradinghours_split_to_list[index_open + 1], "%Y%m%d:%H%M")
+            if market_has_pause:
+                market_pause_start = datetime.datetime.strptime(tradinghours_split_to_list[index_open + 1],
+                                                                "%Y%m%d:%H%M")
                 market_pause_start = tz.normalize(tz.localize(market_pause_start))
-                market_pause_end = datetime.datetime.strptime(tradinghours_split_to_list[index_close - 1], "%Y%m%d:%H%M")
+                market_pause_end = datetime.datetime.strptime(tradinghours_split_to_list[index_close - 1],
+                                                              "%Y%m%d:%H%M")
                 market_pause_end = tz.normalize(tz.localize(market_pause_end))
 
                 print(f"\nOpening: {market_opening} - "
@@ -1531,6 +1532,7 @@ class TestApp(TestWrapper, TestClient):
     def userInfo(self, reqId: int, whiteBrandingId: str):
         super().userInfo(reqId, whiteBrandingId)
         print("UserInfo.", "ReqId:", reqId, "WhiteBrandingId:", whiteBrandingId)
+
     # ! [userinfo]
 
     # Saves all tickData for every stock for every second
@@ -1545,7 +1547,7 @@ class TestApp(TestWrapper, TestClient):
         print("\nFetch stock data function is started.\n")
         # Writes the tickData for each ticker to pd dataframe every second for later analysis
         # When saving this dataframe as excel at the end, ~44 different stocks can be saved
-        while time_now_fetch >= market_opening and time_now_fetch <= market_close + datetime.timedelta(seconds=1):
+        while market_close + datetime.timedelta(seconds=1) >= time_now_fetch >= market_opening:
 
             for i in range(len(iOListCopyForTickData)):
 
@@ -1556,13 +1558,11 @@ class TestApp(TestWrapper, TestClient):
 
                 # Only seeks to append data once per symbol for open position and once for new position in case
                 if i > 0 and iOListCopyForTickData['Symbol'][i] == iOListCopyForTickData['Symbol'][i - 1] and \
-                        (
-                                iOListCopyForTickData['Open position'][i] == iOListCopyForTickData['Open position'][
-                            i - 1] or
-                                (
-                                        iOListCopyForTickData['Open position'][i] == False and
-                                        iOListCopyForTickData['Open position'][i - 1] == False
-                                )
+                        (iOListCopyForTickData['Open position'][i] == iOListCopyForTickData['Open position'][i - 1] or
+                         (
+                                 iOListCopyForTickData['Open position'][i] == False and
+                                 iOListCopyForTickData['Open position'][i - 1] == False
+                         )
                         ):
                     pass
                 else:
@@ -1595,12 +1595,12 @@ class TestApp(TestWrapper, TestClient):
         filename = market_close.strftime("%y%m%d") + NAME_OF_DAILYTRADINGPLAN_SAVE
         MyUtilities.save_excel_outputs(filename, iOList)
 
-        # Avoids saving an excel file if no new positions are in DailyTradingPlan
+        # Avoids saving an Excel file if no new positions are in DailyTradingPlan
         if len(tickData) > 100:
             filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_NEW_SAVE
             MyUtilities.save_excel_outputs(filename, tickData)
 
-        # Avoids saving an excel file if no open positions are in DailyTradingPlan
+        # Avoids saving an Excel file if no open positions are in DailyTradingPlan
         if len(tickData_open_position) > 100:
             filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_OPEN_SAVE
             MyUtilities.save_excel_outputs(filename, tickData_open_position)
@@ -1642,7 +1642,6 @@ def main():
     PriceCondition.__setattr__ = utils.setattr_log
     PercentChangeCondition.__setattr__ = utils.setattr_log
     VolumeCondition.__setattr__ = utils.setattr_log
-
 
     try:
         app = TestApp()
