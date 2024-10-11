@@ -82,7 +82,7 @@ Afterwards, an extract of your DailyTradingPlan will be printed and you will be 
 
 ![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2)
 
-Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be 0 < x < ∞ and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf).
+Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be `0 < x < ∞` and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf).
 
 ![image](https://github.com/user-attachments/assets/c4df87a1-9e76-447d-a6b2-5dda474f04d4)
 
