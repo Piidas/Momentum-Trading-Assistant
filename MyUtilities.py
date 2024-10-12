@@ -82,15 +82,15 @@ class MyUtilities:
             return io_list_clean
 
     @staticmethod
-    def document_trading_parameters(trading_plan, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE, SELL_FULL_REVERSAL_RULE,
-                                    BAD_CLOSE_RULE, MAX_ALLOWED_DAILY_PNL_LOSS, MIN_POSITION_SIZE):
+    def document_trading_parameters(trading_plan, max_stock_spread, sell_half_reversal_rule, sell_full_reversal_rule,
+                                    bad_close_rule, max_allowed_daily_pnl_loss, min_position_size):
 
-        trading_plan.loc[0, 'MAX_STOCK_SPREAD'] = MAX_STOCK_SPREAD
-        trading_plan.loc[0, 'SELL_HALF_REVERSAL_RULE'] = SELL_HALF_REVERSAL_RULE
-        trading_plan.loc[0, 'SELL_FULL_REVERSAL_RULE'] = SELL_FULL_REVERSAL_RULE
-        trading_plan.loc[0, 'BAD_CLOSE_RULE'] = BAD_CLOSE_RULE
-        trading_plan.loc[0, 'MAX_ALLOWED_DAILY_PNL_LOSS'] = MAX_ALLOWED_DAILY_PNL_LOSS
-        trading_plan.loc[0, 'MIN_POSITION_SIZE'] = MIN_POSITION_SIZE
+        trading_plan.loc[0, 'max_stock_spread'] = max_stock_spread
+        trading_plan.loc[0, 'sell_half_reversal_rule'] = sell_half_reversal_rule
+        trading_plan.loc[0, 'sell_full_reversal_rule'] = sell_full_reversal_rule
+        trading_plan.loc[0, 'bad_close_rule'] = bad_close_rule
+        trading_plan.loc[0, 'max_allowed_daily_pnl_loss'] = max_allowed_daily_pnl_loss
+        trading_plan.loc[0, 'min_position_size'] = min_position_size
 
         return trading_plan
 
@@ -165,7 +165,7 @@ class MyUtilities:
             print(io_list_sum)
 
     @staticmethod
-    def update_io_list_order_execution_status(status, order_id, last_fill_price, filled, remaining, io_list, TIMEZONE):
+    def update_io_list_order_execution_status(status, order_id, last_fill_price, filled, remaining, io_list, timezone):
 
         # "Tries" need to find the relevant order_id to confirm the "Filled" status
         if status == "Filled" or ((status == "PreSubmitted" or status == "Submitted" or
@@ -176,7 +176,7 @@ class MyUtilities:
                 io_list.loc[index, 'Order filled'] = True
                 io_list.loc[index, 'Entry price [$]'] = last_fill_price
                 print("\nStock ID:", index, io_list['Symbol'][index], "buy order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled > 0:
                     io_list.loc[index, 'Quantity [#]'] = int(filled)
 
@@ -188,7 +188,7 @@ class MyUtilities:
                 io_list.loc[index, 'Profit order filled'] = True
                 io_list.loc[index, 'Profit taker price [$]'] = last_fill_price
                 print("\nStock ID:", index, io_list['Symbol'][index], "profit order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
@@ -201,7 +201,7 @@ class MyUtilities:
                 io_list.loc[index, 'Stop order filled'] = True
                 io_list.loc[index, 'Stop price [$]'] = last_fill_price
                 print("\nStock ID:", index, io_list['Symbol'][index], "stop loss order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
@@ -214,7 +214,7 @@ class MyUtilities:
                 io_list.loc[index, 'SOC order filled'] = True
                 io_list.loc[index, 'Sell bellow SMA [$]'] = last_fill_price
                 print("\nStock ID:", index, io_list['Symbol'][index], "SOC order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
@@ -225,13 +225,13 @@ class MyUtilities:
         return io_list
 
     @staticmethod
-    def update_daily_pnl(portfolio_size, EXR_RATE, realized_pnl, realized_pnl_percent_last, unrealized_pnl,
-                         unrealized_pnl_percent_last, MAX_ALLOWED_DAILY_PNL_LOSS, max_daily_loss_reached, TIMEZONE,
+    def update_daily_pnl(portfolio_size, exr_rate, realized_pnl, realized_pnl_percent_last, unrealized_pnl,
+                         unrealized_pnl_percent_last, max_allowed_daily_pnl_loss, max_daily_loss_reached, timezone,
                          portfolio_update_prints):
 
         # Starts the DailyPnL calculation
         if portfolio_size is not None:
-            daily_pnl = (realized_pnl + unrealized_pnl) / EXR_RATE  # Only PnL figures come in local currency e.g. YEN
+            daily_pnl = (realized_pnl + unrealized_pnl) / exr_rate  # Only PnL figures come in local currency e.g. YEN
             daily_pnl_percent = daily_pnl / portfolio_size
 
             realized_pnl_percent = realized_pnl / portfolio_size * 100
@@ -242,7 +242,7 @@ class MyUtilities:
             if abs(realized_pnl_percent - realized_pnl_percent_last) > portfolio_update_prints or \
                     abs(unrealized_pnl_percent - unrealized_pnl_percent_last) > portfolio_update_prints:
                 print("\nYour daily PnL (realized + unrealized) is now", round(daily_pnl_percent * 100, 2), "%. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
                 print("Realized:", round(realized_pnl_percent, 2), "%.   ")
                 print("Unrealized:", round(unrealized_pnl_percent, 2), "%.")
@@ -251,10 +251,10 @@ class MyUtilities:
                 unrealized_pnl_percent_last = unrealized_pnl_percent
 
             # Sets max_daily_loss_reached to True if more than 3% are lost which will stopp all new buying of stocks
-            if max_daily_loss_reached == False and daily_pnl_percent <= MAX_ALLOWED_DAILY_PNL_LOSS:
+            if max_daily_loss_reached == False and daily_pnl_percent <= max_allowed_daily_pnl_loss:
                 max_daily_loss_reached = True
-                print(f"\nDaily max. loss of {round(MAX_ALLOWED_DAILY_PNL_LOSS * 100, 1)}% is reached. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                print(f"\nDaily max. loss of {round(max_allowed_daily_pnl_loss * 100, 1)}% is reached. (",
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
         return max_daily_loss_reached, realized_pnl_percent_last, unrealized_pnl_percent_last
 
@@ -267,7 +267,7 @@ class MyUtilities:
         print("\nExcel output saved.\n")
 
     @staticmethod
-    def dailytradingplan_stop_update(i, stop_loss_price, NAME_OF_DAILYTRADINGPLAN):
+    def dailytradingplan_stop_update(i, stop_loss_price, name_of_dailytradingplan):
 
         # Attempt to update the DailyTradingPlan up to 3 times with a 20-second delay between tries
         # if a PermissionError is encountered (e.g., file is open).
@@ -278,11 +278,11 @@ class MyUtilities:
 
         while attempt < max_attempts and not success_writing_xls:
             try:
-                workbook = load_workbook(filename=NAME_OF_DAILYTRADINGPLAN)
+                workbook = load_workbook(filename=name_of_dailytradingplan)
                 sheet = workbook.active
                 cell_name = "I" + str(i + 2)  # Adjusting index for Excel row.
                 sheet[cell_name] = stop_loss_price
-                workbook.save(filename=NAME_OF_DAILYTRADINGPLAN)
+                workbook.save(filename=name_of_dailytradingplan)
                 success_writing_xls = True  # Update was successful, exit the loop
                 print("DailyTradingPlan updated successfully.")
             except PermissionError as e:

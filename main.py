@@ -37,61 +37,61 @@ from MyUtilities import MyUtilities
 from MyOrders import MyOrders
 
 # Constants and rule are defined here
-# PORT = 7497   # PAPERTRADING
-PORT = 7496
-MAX_STOCK_SPREAD = 0.0125
-SELL_HALF_REVERSAL_RULE = 0.06
-SELL_FULL_REVERSAL_RULE = 0.1
-BAD_CLOSE_RULE = 0.15
-MAX_ALLOWED_DAILY_PNL_LOSS = -0.05
-MIN_POSITION_SIZE = 0.001
-PORTFOLIO_UPDATE_PRINTS = 0.1
+# port = 7497   # PAPERTRADING
+port = 7496
+max_stock_spread = 0.0125
+sell_half_reversal_rule = 0.06
+sell_full_reversal_rule = 0.1
+bad_close_rule = 0.15
+max_allowed_daily_pnl_loss = -0.05
+min_position_size = 0.001
+portfolio_update_prints = 0.1
 
 # TASK: Use only IB timezone
 which_markets_to_trade = input("\nDo you want to trade New York [NY], Japan [JP] or Germany [DE]?\n")
 if which_markets_to_trade == "JP":
     market_has_pause = True
-    TIMEZONE = "Japan"
-    EXR_RATE = 150  # YEN per USD
-    NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan_JP.xlsx"
-    NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan_JP.xlsx"
-    NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions_JP.xlsx"
-    NAME_OF_FETCHDATA_OPEN_SAVE = "_fetch_open_positions_JP.xlsx"
-    CLIENT_ID = 11
+    timezone = "Japan"
+    exr_rate = 150  # YEN per USD
+    name_of_dailytradingplan = "DailyTradingPlan_JP.xlsx"
+    name_of_dailytradingplan_save = "_trading_plan_JP.xlsx"
+    name_of_fetchdata_new_save = "_fetch_new_positions_JP.xlsx"
+    name_of_fetchdata_open_save = "_fetch_open_positions_JP.xlsx"
+    client_id = 11
 elif which_markets_to_trade == "NY":
     market_has_pause = False
-    TIMEZONE = "America/New_York"
-    EXR_RATE = 1  # USD per USD
-    NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan.xlsx"
-    NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan.xlsx"
-    NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions.xlsx"
-    NAME_OF_FETCHDATA_OPEN_SAVE = "_fetch_open_positions.xlsx"
-    CLIENT_ID = 22
+    timezone = "America/New_York"
+    exr_rate = 1  # USD per USD
+    name_of_dailytradingplan = "DailyTradingPlan.xlsx"
+    name_of_dailytradingplan_save = "_trading_plan.xlsx"
+    name_of_fetchdata_new_save = "_fetch_new_positions.xlsx"
+    name_of_fetchdata_open_save = "_fetch_open_positions.xlsx"
+    client_id = 22
 elif which_markets_to_trade == "DE":
     market_has_pause = False
-    TIMEZONE = "Europe/Berlin"
-    EXR_RATE = 0.91  # EUR per USD
-    NAME_OF_DAILYTRADINGPLAN = "DailyTradingPlan_DE.xlsx"
-    NAME_OF_DAILYTRADINGPLAN_SAVE = "_trading_plan_DE.xlsx"
-    NAME_OF_FETCHDATA_NEW_SAVE = "_fetch_new_positions_DE.xlsx"
-    NAME_OF_FETCHDATA_OPEN_SAVE = "_fetch_open_positions_DE.xlsx"
-    CLIENT_ID = 33
+    timezone = "Europe/Berlin"
+    exr_rate = 0.91  # EUR per USD
+    name_of_dailytradingplan = "DailyTradingPlan_DE.xlsx"
+    name_of_dailytradingplan_save = "_trading_plan_DE.xlsx"
+    name_of_fetchdata_new_save = "_fetch_new_positions_DE.xlsx"
+    name_of_fetchdata_open_save = "_fetch_open_positions_DE.xlsx"
+    client_id = 33
 else:
     print("Please restart the program and provide a valid entry.")
     exit()
 
 # Variables are defined here
-market_opening = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
-market_close = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=30)
-market_pause_start = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
-market_pause_end = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
+market_opening = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
+market_close = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=30)
+market_pause_start = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
+market_pause_end = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
 ib_timezone_str = ""
 markets_are_open = False
 previous_markets_are_open = False
 all_opening_hours = []
-market_open_print_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
-update_DailyTradingPlan_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
-time_algo_starts = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+market_open_print_timestamp = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+update_DailyTradingPlan_timestamp = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+time_algo_starts = datetime.datetime.now().astimezone(pytz.timezone(timezone))
 market_opening_hours_defined = False
 fetch_data_triggered = False
 daily_brackets_submitted = False
@@ -112,14 +112,14 @@ fetch_stock_data_thread = None
 open_positions_check_done = False
 last_orderStatus_message = {}
 
-iOList = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
+iOList = pd.read_excel(name_of_dailytradingplan, index_col=0)
 tickData = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
 
 iOList, tickData = MyUtilities.data_frame_clean_up(iOList, tickData, return_both_dataframes=True)
 
-iOList = MyUtilities.document_trading_parameters(iOList, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE,
-                                                 SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE, MAX_ALLOWED_DAILY_PNL_LOSS,
-                                                 MIN_POSITION_SIZE)
+iOList = MyUtilities.document_trading_parameters(iOList, max_stock_spread, sell_half_reversal_rule,
+                                                 sell_full_reversal_rule, bad_close_rule, max_allowed_daily_pnl_loss,
+                                                 min_position_size)
 
 tickData_open_position = tickData.copy()
 tickData_new_row = tickData.copy()
@@ -130,7 +130,7 @@ open_positions_iOList = iOList.copy()
 open_positions_iOList = open_positions_iOList.iloc[0:0]
 
 # Prints current time in NY to confirm that there are no bugs conc. timezones considered
-print("\n", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)))
+print("\n", datetime.datetime.now().astimezone(pytz.timezone(timezone)))
 
 # Prints io_list for reference and double-check
 print("\n", iOList.iloc[:, [0, 6, 7, 8, 10, 11]])
@@ -432,12 +432,12 @@ class TestApp(TestWrapper, TestClient):
             print("Order Status - Order ID:", orderId, "Status:", status, "Filled:", decimalMaxString(filled),
                   "Remaining:", decimalMaxString(remaining), "AvgFillPrice:", floatMaxString(avgFillPrice),
                   "Parent ID:", parentId,
-                  "(", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                  "(", datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             last_orderStatus_message = current_message.copy()
 
         iOList = MyUtilities.update_io_list_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
-                                                                   iOList, TIMEZONE)
+                                                                   iOList, timezone)
 
     # ! [orderstatus]
 
@@ -524,12 +524,12 @@ class TestApp(TestWrapper, TestClient):
                 percent_invested = gross_position_value / portfolio_size
 
                 # Only updates if something has changed (beware the units)
-                if abs(percent_invested - percent_invested_last) * 100 > PORTFOLIO_UPDATE_PRINTS:
+                if abs(percent_invested - percent_invested_last) * 100 > portfolio_update_prints:
                     print("\nYour portfolio size is", round(portfolio_size, 0), "$. (",
-                          datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
                     print("You are now", round(percent_invested * 100, 2), "% invested. (",
-                          datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
                     percent_invested_last = percent_invested
 
@@ -541,9 +541,9 @@ class TestApp(TestWrapper, TestClient):
 
         if (key == "RealizedPnL" and currency == "BASE") or (key == "UnrealizedPnL" and currency == "BASE"):
             max_daily_loss_reached, realized_PnL_percent_last, unrealized_PnL_percent_last = (
-                MyUtilities.update_daily_pnl(portfolio_size, EXR_RATE, realized_PnL, realized_PnL_percent_last,
-                                             unrealized_PnL, unrealized_PnL_percent_last, MAX_ALLOWED_DAILY_PNL_LOSS,
-                                             max_daily_loss_reached, TIMEZONE, PORTFOLIO_UPDATE_PRINTS))
+                MyUtilities.update_daily_pnl(portfolio_size, exr_rate, realized_PnL, realized_PnL_percent_last,
+                                             unrealized_PnL, unrealized_PnL_percent_last, max_allowed_daily_pnl_loss,
+                                             max_daily_loss_reached, timezone, portfolio_update_prints))
 
     # ! [updateaccountvalue]
 
@@ -642,7 +642,7 @@ class TestApp(TestWrapper, TestClient):
         global fetch_stock_data_thread
         global open_positions_check_done
 
-        time_now = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+        time_now = datetime.datetime.now().astimezone(pytz.timezone(timezone))
         time_now_str = time_now.strftime("%H:%M:%S")
 
         if time_now > time_algo_starts + datetime.timedelta(minutes=1) and open_positions_check_done == False:
@@ -756,7 +756,7 @@ class TestApp(TestWrapper, TestClient):
                 lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
                 aux_price = round(iOList['Stop price [$]'][reqId], 2)
                 oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                       TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                       timezone, ib_timezone_str, market_close, iOList)
                 for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
@@ -854,7 +854,7 @@ class TestApp(TestWrapper, TestClient):
             update_DailyTradingPlan_timestamp = time_now
 
             try:
-                io_list_update = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
+                io_list_update = pd.read_excel(name_of_dailytradingplan, index_col=0)
 
             except PermissionError:
                 print(
@@ -936,7 +936,7 @@ class TestApp(TestWrapper, TestClient):
                         lmt_price = round(iOList['Profit taker price [$]'][j], 2)
                         aux_price = round(iOList['Stop price [$]'][j], 2)
                         oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price,
-                                                               j, TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                               j, timezone, ib_timezone_str, market_close, iOList)
                         for o in oca:
                             self.placeOrder(o.orderId, contract, o)
                             self.nextOrderId()
@@ -1025,24 +1025,24 @@ class TestApp(TestWrapper, TestClient):
                 iOList.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
 
             # Checks if I would reach my daily investment limit with this buy order
-            if iOList['Entry price [$]'][reqId] / EXR_RATE * iOList['Quantity [#]'][reqId] \
+            if iOList['Entry price [$]'][reqId] / exr_rate * iOList['Quantity [#]'][reqId] \
                     / portfolio_size + percent_invested > percent_invested_max:
 
                 # Reduces the size of the position to stay within the investment limit
                 iOList.loc[reqId, 'Quantity [#]'] = math.floor(
                     (percent_invested_max - percent_invested) * portfolio_size
-                    / (iOList['Entry price [$]'][reqId] / EXR_RATE))
+                    / (iOList['Entry price [$]'][reqId] / exr_rate))
 
                 iOList.loc[reqId, 'Invest limit reached'] = True
                 iOList.loc[reqId, 'Invest limit reached [time]'] = time_now_str
 
                 # Very small resulting positions shall not be traded
                 if iOList['Quantity [#]'][reqId] * iOList['Entry price [$]'][reqId] \
-                        < MIN_POSITION_SIZE * portfolio_size:
+                        < min_position_size * portfolio_size:
                     iOList.loc[reqId, 'Position below limit'] = True
                     print(
                         f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} would exceed my daily investment limit - "
-                        f"remainder is below the minimum position size of {round(MIN_POSITION_SIZE * 100, 1)}"
+                        f"remainder is below the minimum position size of {round(min_position_size * 100, 1)}"
                         f"% - trade not executed. ( {time_now_str} )")
                     return
 
@@ -1054,7 +1054,7 @@ class TestApp(TestWrapper, TestClient):
                 iOList.loc[reqId, 'Max. daily loss reached'] = True
                 iOList.loc[reqId, 'Max. daily loss reached [time]'] = time_now_str
                 print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} not executed - daily max. loss of "
-                      f"{round(MAX_ALLOWED_DAILY_PNL_LOSS * 100, 1)}% is reached. ( {time_now_str} ")
+                      f"{round(max_allowed_daily_pnl_loss * 100, 1)}% is reached. ( {time_now_str} ")
                 return
 
             stock_spread = abs((iOList['ASK price [$]'][reqId] - iOList['BID price [$]'][reqId])
@@ -1074,7 +1074,7 @@ class TestApp(TestWrapper, TestClient):
                           f"stock loops within first minutes. ( {time_now_str} )")
                     iOList.loc[reqId, 'Stock looped'] = True
 
-                if stock_spread > MAX_STOCK_SPREAD:
+                if stock_spread > max_stock_spread:
                     print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} - Spread is above limit at:"
                           f"{round(stock_spread * 100, 2)}% - stock loops within first minutes. ( {time_now_str} )")
                     iOList.loc[reqId, 'Stock looped'] = True
@@ -1085,7 +1085,7 @@ class TestApp(TestWrapper, TestClient):
                     print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} - LAST price is above buy limit."
                           f"( {time_now_str} )")
 
-                if stock_spread > MAX_STOCK_SPREAD:
+                if stock_spread > max_stock_spread:
                     print(f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} - Spread is above limit at: "
                           f"{round(stock_spread * 100, 2)}%. ( {time_now_str} )")
 
@@ -1093,14 +1093,14 @@ class TestApp(TestWrapper, TestClient):
             if iOList['LAST price [$]'][reqId] >= iOList['Buy limit price [$]'][reqId]:
                 iOList.loc[reqId, 'Price above limit'] = True
 
-            if stock_spread > MAX_STOCK_SPREAD:
+            if stock_spread > max_stock_spread:
                 iOList.loc[reqId, 'Spread above limit'] = True
 
             # Checks 1) if stop has not already been undercut, 2) if stock price is still below the buy limit price,
-            # 3) spread < MAX_STOCK_SPREAD
+            # 3) spread < max_stock_spread
             if iOList['Stop undercut'][reqId] == False and \
                     iOList['LAST price [$]'][reqId] < iOList['Buy limit price [$]'][reqId] and \
-                    stock_spread < MAX_STOCK_SPREAD:
+                    stock_spread < max_stock_spread:
 
                 iOList.loc[reqId, 'Order executed'] = True
                 iOList.loc[reqId, 'Order executed [time]'] = time_now.strftime("%y%m%d %H:%M:%S")
@@ -1130,10 +1130,10 @@ class TestApp(TestWrapper, TestClient):
                             f"-1% stop of {iOList['Stop price [$]'][reqId]} is used instead. ( {time_now_str} )")
 
                     MyUtilities.dailytradingplan_stop_update(reqId, iOList['Stop price [$]'][reqId],
-                                                             NAME_OF_DAILYTRADINGPLAN)
+                                                             name_of_dailytradingplan)
 
                 contract = MyUtilities.get_contract_details(iOList, reqId)
-                bracket, iOList = MyOrders.bracket_order(self.nextOrderId(), reqId, TIMEZONE, ib_timezone_str,
+                bracket, iOList = MyOrders.bracket_order(self.nextOrderId(), reqId, timezone, ib_timezone_str,
                                                          market_close, iOList)
                 for o in bracket:
                     self.placeOrder(o.orderId, contract, o)
@@ -1167,7 +1167,7 @@ class TestApp(TestWrapper, TestClient):
                     lmt_price = round(iOList['Profit taker price [$]'][i], 2)
                     aux_price = round(iOList['Stop price [$]'][reqId], 2)
                     oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, i,
-                                                           TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                           timezone, ib_timezone_str, market_close, iOList)
                     for o in oca:
                         self.placeOrder(o.orderId, contract, o)
                         self.nextOrderId()
@@ -1176,21 +1176,21 @@ class TestApp(TestWrapper, TestClient):
                     iOList.loc[i, 'Stop price [$]'] = aux_price
 
                     # Changes stop price in DailyTradingPlan
-                    MyUtilities.dailytradingplan_stop_update(i, aux_price, NAME_OF_DAILYTRADINGPLAN)
+                    MyUtilities.dailytradingplan_stop_update(i, aux_price, name_of_dailytradingplan)
 
                     print(f"\nStock ID: {i} {iOList['Symbol'][i]} - Add and reduce executed. ( {time_now_str} )")
 
             iOList.loc[reqId, 'Add and reduce executed'] = True
 
         # Sells half of positions if stock is increasing X% over buy point and coming back in to b/e
-        # First, marker to be set if buy price increases X% after buy (see SELL_HALF_REVERSAL_RULE)
+        # First, marker to be set if buy price increases X% after buy (see sell_half_reversal_rule)
         if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] and \
                 iOList['2% above buy point'][reqId] == False and \
                 iOList['LAST price [$]'][reqId] > iOList['Entry price [$]'][reqId] * (
-                1 + SELL_HALF_REVERSAL_RULE):
+                1 + sell_half_reversal_rule):
 
             execution_timestamp = datetime.datetime.strptime(iOList['Order executed [time]'][reqId], "%y%m%d %H:%M:%S")
-            tz = pytz.timezone(TIMEZONE)
+            tz = pytz.timezone(timezone)
             execution_timestamp = tz.normalize(tz.localize(execution_timestamp))
 
             # Sets marker only if stock buy order was placed more than 2.5 minutes ago
@@ -1216,7 +1216,7 @@ class TestApp(TestWrapper, TestClient):
             self.placeOrder(order.orderId, contract, order)
 
             print(
-                f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} increased {round(SELL_HALF_REVERSAL_RULE * 100, 1)}% "
+                f"\nStock ID: {reqId} {iOList['Symbol'][reqId]} increased {round(sell_half_reversal_rule * 100, 1)}% "
                 f"above buy price and came in to B/O level - sold half. ( {time_now_str} )")
 
             # Place new OCA profit taker and stop loss for 50% quantity
@@ -1224,7 +1224,7 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
             aux_price = round(iOList['Stop price [$]'][reqId], 2)
             oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                   timezone, ib_timezone_str, market_close, iOList)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
@@ -1233,14 +1233,14 @@ class TestApp(TestWrapper, TestClient):
             iOList.loc[reqId, 'Quantity [#]'] = total_quantity
 
         # Function increases stop to b/e if stock gained Y% over buy point
-        # Marker to be set if buy price increases Y% after buy (see SELL_FULL_REVERSAL_RULE)
+        # Marker to be set if buy price increases Y% after buy (see sell_full_reversal_rule)
         if iOList['Open position'][reqId] == False and iOList['Order filled'][reqId] and \
                 iOList['Stock sold'][reqId] == False and iOList['5% above buy point'][reqId] == False and \
                 iOList['LAST price [$]'][reqId] > iOList['Entry price [$]'][reqId] * (
-                1 + SELL_FULL_REVERSAL_RULE):
+                1 + sell_full_reversal_rule):
 
             execution_timestamp = datetime.datetime.strptime(iOList['Order executed [time]'][reqId], "%y%m%d %H:%M:%S")
-            tz = pytz.timezone(TIMEZONE)
+            tz = pytz.timezone(timezone)
             execution_timestamp = tz.normalize(tz.localize(execution_timestamp))
 
             # Exits if order was place less than 2.5 minutes ago
@@ -1259,17 +1259,17 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
             aux_price = round(iOList['Entry price [$]'][reqId], 2)
             oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                   timezone, ib_timezone_str, market_close, iOList)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
             iOList.loc[reqId, 'Stop price [$]'] = iOList['Entry price [$]'][reqId]
 
             # Changes stop price in DailyTradingPlan
-            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, NAME_OF_DAILYTRADINGPLAN)
+            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, name_of_dailytradingplan)
 
             print("\nStock ID:", reqId, iOList['Symbol'][reqId],
-                  "increased", round(SELL_FULL_REVERSAL_RULE * 100, 1),
+                  "increased", round(sell_full_reversal_rule * 100, 1),
                   "% above buy price - stop is increased to B/E. (",
                   time_now_str, ")")
 
@@ -1299,7 +1299,7 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
             aux_price = round(iOList['Stop price [$]'][reqId], 2)
             oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                   TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                   timezone, ib_timezone_str, market_close, iOList)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
@@ -1324,7 +1324,7 @@ class TestApp(TestWrapper, TestClient):
                     iOList['Bad close rule'][reqId] == False and round(iOList['Quantity [#]'][reqId], 0) > 1 and \
                     (
                             (iOList['LAST price [$]'][reqId] - iOList['LOW price [$]'][reqId]) /
-                            (iOList['HIGH price [$]'][reqId] - iOList['LOW price [$]'][reqId]) < BAD_CLOSE_RULE
+                            (iOList['HIGH price [$]'][reqId] - iOList['LOW price [$]'][reqId]) < bad_close_rule
                     ):
 
                 # Cancels current bracket oder
@@ -1343,7 +1343,7 @@ class TestApp(TestWrapper, TestClient):
                 lmt_price = round(iOList['Profit taker price [$]'][reqId], 2)
                 aux_price = round(iOList['Stop price [$]'][reqId], 2)
                 oca, iOList = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                       TIMEZONE, ib_timezone_str, market_close, iOList)
+                                                       timezone, ib_timezone_str, market_close, iOList)
                 for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
@@ -1403,7 +1403,7 @@ class TestApp(TestWrapper, TestClient):
 
         super().contractDetails(reqId, contractDetails)
         # printinstance(contractDetails)
-        time_delta_to_initialized_market = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - market_opening
+        time_delta_to_initialized_market = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - market_opening
 
         # saves longName in io_list and prints it for checking
         iOList.loc[reqId, 'Company name'] = contractDetails.longName
@@ -1426,7 +1426,7 @@ class TestApp(TestWrapper, TestClient):
             ib_timezone_str = contractDetails.timeZoneId
             print(f"\nIB's timezone is {ib_timezone_str}.")
             market_trading_hours = contractDetails.liquidHours
-            tz = pytz.timezone(TIMEZONE)
+            tz = pytz.timezone(timezone)
             tradinghours_split_to_list = re.split(";|-", market_trading_hours)
             print("\n", tradinghours_split_to_list)
             index_open = int(input("\nEnter the index of the next market OPEN: "))
@@ -1457,7 +1457,7 @@ class TestApp(TestWrapper, TestClient):
             else:
                 print("Earnings dates can only be given for US-stocks.")
 
-            if datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) > market_close:
+            if datetime.datetime.now().astimezone(pytz.timezone(timezone)) > market_close:
                 input("\n ### Attention ### Market close is already in the past. Code will exit.")
                 exit()
 
@@ -1551,7 +1551,7 @@ class TestApp(TestWrapper, TestClient):
         global tickData_open_position
         global tickData_new_row
 
-        time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+        time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
         time_now_fetch_str = time_now_fetch.strftime("%y%m%d %H:%M:%S")
 
         print("\nFetch stock data function is started.\n")
@@ -1599,20 +1599,20 @@ class TestApp(TestWrapper, TestClient):
             # Pauses while-loop for one second until the next round
             time.sleep(1)
 
-            time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+            time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
             time_now_fetch_str = time_now_fetch.strftime("%y%m%d %H:%M:%S")
 
-        filename = market_close.strftime("%y%m%d") + NAME_OF_DAILYTRADINGPLAN_SAVE
+        filename = market_close.strftime("%y%m%d") + name_of_dailytradingplan_save
         MyUtilities.save_excel_outputs(filename, iOList)
 
         # Avoids saving an Excel file if no new positions are in DailyTradingPlan
         if len(tickData) > 100:
-            filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_NEW_SAVE
+            filename = market_close.strftime("%y%m%d") + name_of_fetchdata_new_save
             MyUtilities.save_excel_outputs(filename, tickData)
 
         # Avoids saving an Excel file if no open positions are in DailyTradingPlan
         if len(tickData_open_position) > 100:
-            filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_OPEN_SAVE
+            filename = market_close.strftime("%y%m%d") + name_of_fetchdata_open_save
             MyUtilities.save_excel_outputs(filename, tickData_open_position)
 
         # Return to close the thread, since daemon=False. "sys.exit()" is an alternative.
@@ -1620,8 +1620,8 @@ class TestApp(TestWrapper, TestClient):
 
 
 def main():
-    global CLIENT_ID
-    global PORT
+    global client_id
+    global port
 
     SetupLogger()
     logging.debug("now is %s", datetime.datetime.now())
@@ -1631,7 +1631,7 @@ def main():
     # cmdLineParser.add_option("-c", action="store_True", dest="use_cache", default = False, help = "use the cache")
     # cmdLineParser.add_option("-f", action="store", type="string", dest="file", default="", help="the input file")
     cmdLineParser.add_argument("-p", "--port", action="store", type=int,
-                               dest="port", default=PORT, help="The TCP port to use")
+                               dest="port", default=port, help="The TCP port to use")
     cmdLineParser.add_argument("-C", "--global-cancel", action="store_true",
                                dest="global_cancel", default=False,
                                help="whether to trigger a globalCancel req")
@@ -1658,7 +1658,7 @@ def main():
         if args.global_cancel:
             app.globalCancelOnly = True
         # ! [connect]
-        app.connect("127.0.0.1", args.port, clientId=CLIENT_ID)
+        app.connect("127.0.0.1", args.port, clientId=client_id)
         # ! [connect]
         print("serverVersion:%s connectionTime:%s" % (app.serverVersion(),
                                                       app.twsConnectionTime()))
