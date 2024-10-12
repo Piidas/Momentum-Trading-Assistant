@@ -28,15 +28,15 @@ This section contains all necessary steps you need to get MTA up and running:
 
   3) Subscribe to the relevant market data on you IB-account
 
-  4) Save main.py, MyOrders.py, MyUtilities.py, tickDataTemplate.xlsx and DailyTradingPlan.xlsx in one folder of your choice
+  4) Save `main.py`, `MyOrders.py`, `MyUtilities.py`, `tickDataTemplate.xlsx` and `DailyTradingPlan.xlsx` in one folder of your choice
 
-  5) Fill columns A, B and D to M of DailyTradingPlan.xlsx
+  5) Fill columns A, B and D to M of `DailyTradingPlan.xlsx`
 
   6) Log into TWS
 
   7) Open your CMD prompt for windows and, navigate to the folder where you saved the files (e.g. through “cd documents\foldername”)
 
-  8) Start MTA through “python main.py”
+  8) Start MTA through `python main.py`
 
 
 
@@ -44,27 +44,27 @@ It is recommended but not necessary to start MTA before the market opens.
 
 # MTA input and output files
 
-As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires five files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only DailyTradingPlan.xlsx  contains your daily trading plan and needs to be updated daily. The input files are:
+As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires five files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
 
-  - [main.py](/main.py)
+  - [`main.py`](/main.py)
 
-  - [MyOrders.py](/MyOrders.py)
+  - [`MyOrders.py`](/MyOrders.py)
 
-  - [MyUtilities.py](/MyUtilities.py)
+  - [`MyUtilities.py`](/MyUtilities.py)
 
-  - [tickDataTemplate.xlsx](/tickDataTemplate.xlsx)
+  - [`tickDataTemplate.xlsx`](/tickDataTemplate.xlsx)
 
-  - [DailyTradingPlan.xlsx](/DailyTradingPlan.xlsx) (resp. DailyTradingPlan_DE.xlsx or DailyTradingPlan_JP.xlsx)
+  - [`DailyTradingPlan.xlsx`](/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
 
 
 
 The program will return the following three files as output:
 
-  - yymmdd_fetch_open_positions
+  - `yymmdd_fetch_open_positions.xlsx`
 
-  - yymmdd_fetch_new_positions
+  - `yymmdd_fetch_new_positions.xlsx`
 
-  - yymmdd_trading_plan
+  - `yymmdd_trading_plan.xlsx`
 
 
 
@@ -72,9 +72,9 @@ The program will return the following three files as output:
 
 It is recommended but not required to start MTA at any time before the market opening. The first row BTC of DailyTradingPlan is recommended not to be changed to assure program stability.
 
-Open the cmd prompt or your favorite IDE and locate the folder where the program is saved e.g. through “cd documents\foldername” on windows.
+Open the cmd prompt or your favorite IDE and locate the folder where the program is saved e.g. through `cd documents\foldername` on windows.
 
-Start the program through its file name e.g. “python main.py”.
+Start the program through its file name e.g. `python main.py`.
 
 Define which market you want to trade, see Figure below.
 
@@ -120,7 +120,7 @@ The codes gives you a warning if one earnings call is only three days or less aw
 
 ![image](https://github.com/user-attachments/assets/0dea2da4-7c56-4b98-8372-3beb185b255b)
 
-If there are any issues during this starting phase of MTA, consider interrupting the code e.g. through STRG + C and restarting it with updated information.
+If there are any issues during this starting phase of MTA, consider interrupting the code e.g. through `STRG + C` and restarting it with updated information.
 
 
 
