@@ -24,7 +24,7 @@ This section contains all necessary steps you need to get MTA up and running:
 
   1) Ensure your IB TWS is set up properly to use the API with port 7496 see IB documentation at https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#tws-config-api
 
-  2) Make sure to not use IB API as it is available via `pip` as this package is outdated and no longer supported. It needs to be downloaded and installed manually, see https://interactivebrokers.github.io/#
+  2) Make sure not to use IB API as it is available via `pip` as this package is outdated and no longer supported. It needs to be downloaded and installed manually, see https://interactivebrokers.github.io/#
 
   3) Subscribe to the relevant market data on you IB-account
 
