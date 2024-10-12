@@ -725,10 +725,10 @@ class TestApp(TestWrapper, TestClient):
         if market_opening_hours_defined == False:
             return
 
-        if market_has_pause == False or (market_has_pause and time_now < market_opening):
-            minutes_to_market_open = (market_opening - time_now).total_seconds() / 60
-        elif market_has_pause and time_now > market_opening:
+        if market_has_pause and time_now > market_opening:
             minutes_to_market_open = (market_pause_end - time_now).total_seconds() / 60
+        else:
+            minutes_to_market_open = (market_opening - time_now).total_seconds() / 60
 
         # Place brackets around open positions
         if daily_brackets_submitted == False and market_opening_hours_defined and \
