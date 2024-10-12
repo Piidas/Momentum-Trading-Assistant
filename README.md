@@ -24,17 +24,19 @@ This section contains all necessary steps you need to get MTA up and running:
 
   1) Ensure your IB TWS is set up properly to use the API with port 7496 see IB documentation at https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/#tws-config-api
 
-  2) Subscribe to the relevant market data on you IB-account
+  2) Make sure to not use IB API as it is available via `pip`. It needs to be downloaded and installed manually, see https://interactivebrokers.github.io/#
 
-  3) Save main.py, MyOrders.py, MyUtilities.py, tickDataTemplate.xlsx and DailyTradingPlan.xlsx in one folder of your choice
+  3) Subscribe to the relevant market data on you IB-account
 
-  4) Fill columns A, B and D to M of DailyTradingPlan.xlsx
+  4) Save main.py, MyOrders.py, MyUtilities.py, tickDataTemplate.xlsx and DailyTradingPlan.xlsx in one folder of your choice
 
-  5) Log into TWS
+  5) Fill columns A, B and D to M of DailyTradingPlan.xlsx
 
-  6) Open your CMD prompt for windows and, navigate to the folder where you saved the files (e.g. through “cd documents\foldername”)
+  6) Log into TWS
 
-  7) Start MTA through “python main.py”
+  7) Open your CMD prompt for windows and, navigate to the folder where you saved the files (e.g. through “cd documents\foldername”)
+
+  8) Start MTA through “python main.py”
 
 
 
