@@ -849,6 +849,7 @@ class TestApp(TestWrapper, TestClient):
         if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=15) < time_now:
 
             success_reading_xls = True
+            io_list_update = None
             update_DailyTradingPlan_timestamp = time_now
 
             try:
@@ -857,6 +858,10 @@ class TestApp(TestWrapper, TestClient):
             except PermissionError:
                 print(
                     f"Did not get permission to read DailyTradingPlan. Will try again in some secs. ( {time_now_str} )")
+                success_reading_xls = False
+
+            except Exception as e:
+                print(f"An error occurred: {e}")
                 success_reading_xls = False
 
             if success_reading_xls:
