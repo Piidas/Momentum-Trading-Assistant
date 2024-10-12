@@ -4,6 +4,7 @@ import datetime
 import collections
 import inspect
 from decimal import Decimal
+from typing import Optional
 
 import threading
 import pandas as pd
@@ -95,9 +96,9 @@ market_opening_hours_defined = False
 fetch_data_triggered = False
 daily_brackets_submitted = False
 all_orders_cancelled = False
-percent_invested = None
 percent_invested_last = -1
-portfolio_size = None
+portfolio_size: Optional[float] = None  # Required to avoid type warnings
+percent_invested: Optional[float] = None  # Required to avoid type warnings
 PnL_percent = 0
 max_daily_loss_reached = False
 gross_position_value = None
@@ -860,6 +861,10 @@ class TestApp(TestWrapper, TestClient):
                     f"Did not get permission to read DailyTradingPlan. Will try again in some secs. ( {time_now_str} )")
                 success_reading_xls = False
 
+            except FileNotFoundError:
+                print("File not found.")
+                success_reading_xls = False
+
             except Exception as e:
                 print(f"An error occurred: {e}")
                 success_reading_xls = False
@@ -994,7 +999,7 @@ class TestApp(TestWrapper, TestClient):
             iOList.loc[reqId, 'Stock sold [time]'] = time_now_str
 
         # Only continues if all relevant data points are defined and parameters given
-        if pd.isnull(percent_invested) or pd.isnull(portfolio_size) or \
+        if pd.isnull(percent_invested) or portfolio_size in None or percent_invested is None or \
                 iOList['Position below limit'][reqId] or iOList['Max. daily loss reached'][reqId]:
             return
 

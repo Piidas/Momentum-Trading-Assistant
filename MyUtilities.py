@@ -230,7 +230,7 @@ class MyUtilities:
                          portfolio_update_prints):
 
         # Starts the DailyPnL calculation
-        if not pd.isnull(portfolio_size):
+        if portfolio_size is not None:
             daily_pnl = (realized_pnl + unrealized_pnl) / EXR_RATE  # Only PnL figures come in local currency e.g. YEN
             daily_pnl_percent = daily_pnl / portfolio_size
 
