@@ -733,7 +733,7 @@ class TestApp(TestWrapper, TestClient):
 
         # Place brackets around open positions
         if not daily_brackets_submitted and market_opening_hours_defined and \
-                io_list['Open position'][reqId] and io_list['Open position bracket submitted'][reqId] == False:
+                io_list['Open position'][reqId] and not io_list['Open position bracket submitted'][reqId]:
 
             # Cancels all open orders every time the algo is started if the market opening is only some minutes away
             # Note that this only happens if there are open positions in io_list
@@ -897,18 +897,18 @@ class TestApp(TestWrapper, TestClient):
 
                     # Updating open positions or filled new positions
                     elif (
-                            (io_list['Open position'][j] == False and io_list['Order filled'][j] and
-                             io_list['Stock sold'][j] == False)
+                            (not io_list['Open position'][j] and io_list['Order filled'][j] and
+                             not io_list['Stock sold'][j])
                             or (
                                     io_list['Open position'][j] and
-                                    io_list['Open position bracket submitted'][j] and io_list['Stock sold'][j] == False
+                                    io_list['Open position bracket submitted'][j] and not io_list['Stock sold'][j]
                             )) and (
                             io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j] or
                             io_list_update['Profit taker price [$]'][j] != io_list['Profit taker price [$]'][j] or
                             io_list_update['Quantity [#]'][j] < io_list['Quantity [#]'][j]
                     ):
 
-                        if io_list['Open position'][j] == False and io_list['Stop low of day'][j] and \
+                        if not io_list['Open position'][j] and io_list['Stop low of day'][j] and \
                                 io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j]:
                             print(
                                 f"\n### ATTENTION #### Stock ID: {j} {io_list['Symbol'][j]} - You are overwriting stop "
@@ -948,7 +948,7 @@ class TestApp(TestWrapper, TestClient):
                         io_list.loc[j, 'Open position updated [time]'] = time_now_str
 
                     # Updating new positions that did not execute
-                    elif io_list['Open position'][j] == False and io_list['Crossed buy price'][j] == False and \
+                    elif not io_list['Open position'][j] and not io_list['Crossed buy price'][j] and \
                             (
                                     io_list_update['Entry price [$]'][j] != io_list['Entry price [$]'][j] or
                                     io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j] or
@@ -972,13 +972,13 @@ class TestApp(TestWrapper, TestClient):
         # Stocks meeting these criteria are skipped and shall only prevent the code from "falling asleep"
         # Recommended to use Crypto here due to 24/7 trading
         if io_list['Entry price [$]'][reqId] == 9 and io_list['Stop price [$]'][reqId] == 11:
-            if io_list['Stop undercut'][reqId] == False:
+            if not io_list['Stop undercut'][reqId]:
                 io_list.loc[reqId, 'Stop undercut'] = True
             return
 
         # Checks if price undercuts stop and sets value as True in case
         if io_list['LAST price [$]'][reqId] < io_list['Stop price [$]'][reqId] and \
-                io_list['Stop undercut'][reqId] == False:
+                not io_list['Stop undercut'][reqId]:
             io_list.loc[reqId, 'Stop undercut'] = True
             io_list.loc[reqId, 'Stop undercut [time]'] = time_now_str
             print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} has undercut the stop. ( {time_now_str} )")
@@ -987,9 +987,9 @@ class TestApp(TestWrapper, TestClient):
         if (
                 (
                         io_list['Open position'][reqId] or
-                        (io_list['Open position'][reqId] == False and io_list['Order filled'][reqId])
+                        (not io_list['Open position'][reqId] and io_list['Order filled'][reqId])
                 ) and
-                io_list['Stock sold'][reqId] == False
+                not io_list['Stock sold'][reqId]
         ) and \
                 (
                         io_list['Profit order filled'][reqId] or io_list['Stop order filled'][reqId] or
@@ -1009,16 +1009,16 @@ class TestApp(TestWrapper, TestClient):
 
         if (
                 io_list['LAST price [$]'][reqId] > io_list['Entry price [$]'][reqId] and
-                io_list['Open position'][reqId] == False and io_list['Crossed buy price'][reqId] == False and
-                io_list['Order executed'][reqId] == False
+                not io_list['Open position'][reqId] and not io_list['Crossed buy price'][reqId] and
+                not io_list['Order executed'][reqId]
         ) or \
                 (
-                        io_list['Crossed buy price'][reqId] and io_list['Order executed'][reqId] == False and
+                        io_list['Crossed buy price'][reqId] and not io_list['Order executed'][reqId] and
                         time_now < market_opening + datetime.timedelta(minutes=1)
                 ):
 
             # Marks "crossed buy price" only once
-            if io_list['Crossed buy price'][reqId] == False:
+            if not io_list['Crossed buy price'][reqId]:
                 io_list.loc[reqId, 'Crossed buy price'] = True
                 io_list.loc[reqId, 'Crossed buy price [time]'] = time_now_str
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price. ( {time_now_str} )")
@@ -1098,7 +1098,7 @@ class TestApp(TestWrapper, TestClient):
 
             # Checks 1) if stop has not already been undercut, 2) if stock price is still below the buy limit price,
             # 3) spread < max_stock_spread
-            if io_list['Stop undercut'][reqId] == False and \
+            if not io_list['Stop undercut'][reqId] and \
                     io_list['LAST price [$]'][reqId] < io_list['Buy limit price [$]'][reqId] and \
                     stock_spread < max_stock_spread:
 
@@ -1145,16 +1145,16 @@ class TestApp(TestWrapper, TestClient):
         # Add & reduce function
         # Increases the stop of all open positions when additional shares are added
         if daily_brackets_submitted and io_list['Add and reduce'][reqId] and \
-                io_list['Add and reduce executed'][reqId] == False and io_list['Order filled'][reqId]:
+                not io_list['Add and reduce executed'][reqId] and io_list['Order filled'][reqId]:
 
             for i in range(len(io_list)):
                 if (
                         (
-                                io_list['Open position'][i] == False and io_list['Order filled'][i] and
-                                io_list['Stock sold'][i] == False
+                                not io_list['Open position'][i] and io_list['Order filled'][i] and
+                                not io_list['Stock sold'][i]
                         ) or
                         (
-                                io_list['Open position'][i] and io_list['Stock sold'][i] == False
+                                io_list['Open position'][i] and not io_list['Stock sold'][i]
                         )
                 ) and io_list['Symbol'][i] == io_list['Symbol'][reqId]:
 
@@ -1184,8 +1184,8 @@ class TestApp(TestWrapper, TestClient):
 
         # Sells half of positions if stock is increasing X% over buy point and coming back in to b/e
         # First, marker to be set if buy price increases X% after buy (see sell_half_reversal_rule)
-        if io_list['Open position'][reqId] == False and io_list['Order filled'][reqId] and \
-                io_list['2% above buy point'][reqId] == False and \
+        if not io_list['Open position'][reqId] and io_list['Order filled'][reqId] and \
+                not io_list['2% above buy point'][reqId] and \
                 io_list['LAST price [$]'][reqId] > io_list['Entry price [$]'][reqId] * (
                 1 + sell_half_reversal_rule):
 
@@ -1199,9 +1199,9 @@ class TestApp(TestWrapper, TestClient):
 
         # Second, if stock comes in again to b/o level, 50% must be sold, bracket cancelled
         # New OCA profit taker and stop loss to be set for 50% of quantity
-        if io_list['Open position'][reqId] == False and io_list['Order filled'][reqId] and \
-                io_list['2% above buy point'][reqId] and io_list['New OCA bracket'][reqId] == False and \
-                io_list['Stock sold'][reqId] == False and io_list['5% above buy point'][reqId] == False and \
+        if not io_list['Open position'][reqId] and io_list['Order filled'][reqId] and \
+                io_list['2% above buy point'][reqId] and not io_list['New OCA bracket'][reqId] and \
+                not io_list['Stock sold'][reqId] and not io_list['5% above buy point'][reqId] and \
                 io_list['LAST price [$]'][reqId] <= \
                 io_list['Entry price [$]'][reqId] * (1 + io_list['Spread at execution [%]'][reqId] / 100) and \
                 round(io_list['Quantity [#]'][reqId], 0) > 1:
@@ -1234,8 +1234,8 @@ class TestApp(TestWrapper, TestClient):
 
         # Function increases stop to b/e if stock gained Y% over buy point
         # Marker to be set if buy price increases Y% after buy (see sell_full_reversal_rule)
-        if io_list['Open position'][reqId] == False and io_list['Order filled'][reqId] and \
-                io_list['Stock sold'][reqId] == False and io_list['5% above buy point'][reqId] == False and \
+        if not io_list['Open position'][reqId] and io_list['Order filled'][reqId] and \
+                not io_list['Stock sold'][reqId] and not io_list['5% above buy point'][reqId] and \
                 io_list['LAST price [$]'][reqId] > io_list['Entry price [$]'][reqId] * (
                 1 + sell_full_reversal_rule):
 
@@ -1275,14 +1275,14 @@ class TestApp(TestWrapper, TestClient):
 
         # SOC SMA Function: Cancels open orders and places new bracket without sell on close order
         if time_now > market_close - (datetime.timedelta(minutes=8)) and \
-                io_list['Stock sold'][reqId] == False and io_list['Sell on close'][reqId] and \
+                not io_list['Stock sold'][reqId] and io_list['Sell on close'][reqId] and \
                 pd.notna(io_list['Sell bellow SMA [$]'][reqId]) and \
                 io_list['Profit taker price [$]'][reqId] > io_list['LAST price [$]'][reqId] > \
                 io_list['Stop price [$]'][reqId] and \
                 io_list['LAST price [$]'][reqId] > io_list['Sell bellow SMA [$]'][reqId] and \
                 (
                         (
-                                io_list['Open position'][reqId] == False and io_list['Order filled'][reqId]
+                                not io_list['Open position'][reqId] and io_list['Order filled'][reqId]
                         ) or
                         io_list['Open position'][reqId]
                 ):
@@ -1311,17 +1311,16 @@ class TestApp(TestWrapper, TestClient):
         # Sells half of the position if stock does not close in the upper Z% of the daily range
         # This function is working only when sell-half and sell-full rules have not been triggered
         if time_now > market_close - (datetime.timedelta(minutes=2)) and \
-                io_list['Bad close checked'][reqId] == False:
+                not io_list['Bad close checked'][reqId]:
 
             io_list.loc[reqId, 'Bad close checked'] = True
 
-            if io_list['Open position'][reqId] == False and \
-                    io_list['Order filled'][reqId] and io_list['Stock sold'][reqId] == False and \
-                    io_list['Sell on close'][reqId] == False and pd.isnull(
+            if not io_list['Open position'][reqId] and \
+                    io_list['Order filled'][reqId] and not io_list['Stock sold'][reqId] and \
+                    not io_list['Sell on close'][reqId] and pd.isnull(
                 io_list['Sell bellow SMA [$]'][reqId]) and \
-                    io_list['5% above buy point'][reqId] == False and io_list['New OCA bracket'][
-                reqId] == False and \
-                    io_list['Bad close rule'][reqId] == False and round(io_list['Quantity [#]'][reqId], 0) > 1 and \
+                    not io_list['5% above buy point'][reqId] and not io_list['New OCA bracket'][reqId] and \
+                    not io_list['Bad close rule'][reqId] and round(io_list['Quantity [#]'][reqId], 0) > 1 and \
                     (
                             (io_list['LAST price [$]'][reqId] - io_list['LOW price [$]'][reqId]) /
                             (io_list['HIGH price [$]'][reqId] - io_list['LOW price [$]'][reqId]) < bad_close_rule
@@ -1570,8 +1569,8 @@ class TestApp(TestWrapper, TestClient):
                 if i > 0 and iOListCopyForTickData['Symbol'][i] == iOListCopyForTickData['Symbol'][i - 1] and \
                         (iOListCopyForTickData['Open position'][i] == iOListCopyForTickData['Open position'][i - 1] or
                          (
-                                 iOListCopyForTickData['Open position'][i] == False and
-                                 iOListCopyForTickData['Open position'][i - 1] == False
+                                 not iOListCopyForTickData['Open position'][i] and
+                                 not iOListCopyForTickData['Open position'][i - 1]
                          )
                         ):
                     pass
@@ -1587,7 +1586,7 @@ class TestApp(TestWrapper, TestClient):
                     tickData_new_row.loc[0, 'BID size'] = iOListCopyForTickData['BID size'][i]
                     tickData_new_row.loc[0, 'Volume'] = iOListCopyForTickData['Volume'][i]
 
-                    if iOListCopyForTickData['Open position'][i] == False:
+                    if not iOListCopyForTickData['Open position'][i]:
                         # Appends row to tickData
                         tickData = pd.concat([tickData, tickData_new_row], ignore_index=True)
 
