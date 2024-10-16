@@ -13,6 +13,23 @@ import re
 class MyUtilities:
 
     @staticmethod
+    def feed_size_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, size):
+
+        if tick_type == "ASK_SIZE":
+            io_list.loc[req_id, 'ASK size'] = float(size)
+            io_list_copy_for_tick_data.loc[req_id, 'ASK size'] = float(size)
+
+        if tick_type == "BID_SIZE":
+            io_list.loc[req_id, 'BID size'] = float(size)
+            io_list_copy_for_tick_data.loc[req_id, 'BID size'] = float(size)
+
+        if tick_type == "VOLUME":
+            io_list.loc[req_id, 'Volume'] = float(size)
+            io_list_copy_for_tick_data.loc[req_id, 'Volume'] = float(size)
+
+        return io_list, io_list_copy_for_tick_data
+
+    @staticmethod
     def feed_price_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, price):
 
         if tick_type == "CLOSE":

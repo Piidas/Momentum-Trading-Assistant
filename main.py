@@ -1262,17 +1262,10 @@ class TestApp(TestWrapper, TestClient):
         global io_list
         global io_list_copy_for_tick_data
 
-        if TickTypeEnum.toStr(tickType) == "ASK_SIZE":
-            io_list.loc[reqId, 'ASK size'] = float(size)
-            io_list_copy_for_tick_data.loc[reqId, 'ASK size'] = float(size)
-
-        if TickTypeEnum.toStr(tickType) == "BID_SIZE":
-            io_list.loc[reqId, 'BID size'] = float(size)
-            io_list_copy_for_tick_data.loc[reqId, 'BID size'] = float(size)
-
-        if TickTypeEnum.toStr(tickType) == "VOLUME":
-            io_list.loc[reqId, 'Volume'] = float(size)
-            io_list_copy_for_tick_data.loc[reqId, 'Volume'] = float(size)
+        # Allocates all relevant tickTypes to their respective field
+        io_list, io_list_copy_for_tick_data = MyUtilities.feed_size_io_lists(io_list, io_list_copy_for_tick_data,
+                                                                              TickTypeEnum.toStr(tickType), reqId,
+                                                                              size)
 
     @iswrapper
     def tickGeneric(self, reqId: TickerId, tickType: TickType, value: float):
