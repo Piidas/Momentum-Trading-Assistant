@@ -999,7 +999,7 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
 
         # Only continues if all relevant data points are defined and parameters given
-        if pd.isnull(percent_invested) or portfolio_size in None or percent_invested is None or \
+        if pd.isnull(percent_invested) or portfolio_size is None or percent_invested is None or \
                 io_list['Position below limit'][reqId] or io_list['Max. daily loss reached'][reqId]:
             return
 
