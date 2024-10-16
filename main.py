@@ -618,7 +618,7 @@ class TestApp(TestWrapper, TestClient):
         previous_markets_are_open = markets_are_open
 
         # Allocates all relevant tickTypes to their respective field
-        io_list, io_list_copy_for_tick_data = MyUtilities.feed_io_lists(io_list, io_list_copy_for_tick_data,
+        io_list, io_list_copy_for_tick_data = MyUtilities.feed_price_io_lists(io_list, io_list_copy_for_tick_data,
                                                                         TickTypeEnum.toStr(tickType), reqId, price)
 
         # Start function fetch_stock_data() only oncetick_type
@@ -1255,10 +1255,7 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Bad close rule [time]'] = time_now_str
                 io_list.loc[reqId, 'Quantity [#]'] = total_quantity
 
-    # ! [tickprice]
-
     @iswrapper
-    # ! [ticksize]
     def tickSize(self, reqId: TickerId, tickType: TickType, size: Decimal):
         super().tickSize(reqId, tickType, size)
         # print("TickSize. TickerId:", req_id, "TickType:", tickType, "Size: ", decimalMaxString(size))
@@ -1277,25 +1274,18 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Volume'] = float(size)
             io_list_copy_for_tick_data.loc[reqId, 'Volume'] = float(size)
 
-    # ! [ticksize]
-
     @iswrapper
-    # ! [tickgeneric]
     def tickGeneric(self, reqId: TickerId, tickType: TickType, value: float):
         super().tickGeneric(reqId, tickType, value)
         # print("TickGeneric. TickerId:", req_id, "TickType:", tickType, "Value:", floatMaxString(value))
 
-    # ! [tickgeneric]
-
     @printWhenExecuting
     def contractOperations(self):
-        # ! [reqcontractdetails]
         for i in range(len(io_list)):
             contract = MyUtilities.get_contract_details(io_list, i)
             self.reqContractDetails(i, contract)
 
     @iswrapper
-    # ! [contractdetails]
     def contractDetails(self, reqId: int, contractDetails: ContractDetails):
         global market_opening
         global market_close
@@ -1365,53 +1355,35 @@ class TestApp(TestWrapper, TestClient):
                 input("\n ### Attention ### Market close is already in the past. Code will exit.")
                 exit()
 
-    # ! [contractdetails]
-
     @iswrapper
-    # ! [contractdetailsend]
     def contractDetailsEnd(self, reqId: int):
         super().contractDetailsEnd(reqId)
         print("ContractDetailsEnd. ReqId:", reqId)
 
-    # ! [contractdetailsend]
-
     @iswrapper
-    # ! [execdetails]
     def execDetails(self, reqId: int, contract: Contract, execution: Execution):
         super().execDetails(reqId, contract, execution)
         print("\nExecDetails. Symbol:", contract.symbol, "SecType:", contract.secType, "Currency:",
               contract.currency, "Shares:", execution.shares, "Avrg. price:", round(execution.avgPrice, 2), "OrderId:",
               execution.orderId)
 
-    # ! [execdetails]
-
     @iswrapper
-    # ! [execdetailsend]
     def execDetailsEnd(self, reqId: int):
         super().execDetailsEnd(reqId)
         print("ExecDetailsEnd. ReqId:", reqId)
 
-    # ! [execdetailsend]
-
     @iswrapper
-    # ! [commissionreport]
     def commissionReport(self, commissionReport: CommissionReport):
         super().commissionReport(commissionReport)
         print("\nCommissionReport. Commission:", round(commissionReport.commission, 2), "Currency:",
               commissionReport.currency, "RealizedPnL:", round(commissionReport.realizedPNL, 2))
 
-    # ! [commissionreport]
-
     @iswrapper
-    # ! [currenttime]
     def currentTime(self, time: int):
         super().currentTime(time)
         print("CurrentTime:", datetime.datetime.fromtimestamp(time).strftime("%Y%m%d-%H:%M:%S"))
 
-    # ! [currenttime]
-
     @iswrapper
-    # ! [completedorder]
     def completedOrder(self, contract: Contract, order: Order,
                        orderState: OrderState):
         super().completedOrder(contract, order, orderState)
@@ -1431,23 +1403,15 @@ class TestApp(TestWrapper, TestClient):
               "MidOffsetAtWhole:", floatMaxString(order.midOffsetAtWhole), "MidOffsetAtHalf:",
               floatMaxString(order.midOffsetAtHalf))
 
-    # ! [completedorder]
-
     @iswrapper
-    # ! [completedordersend]
     def completedOrdersEnd(self):
         super().completedOrdersEnd()
         print("CompletedOrdersEnd")
 
-    # ! [completedordersend]
-
     @iswrapper
-    # ! [userinfo]
     def userInfo(self, reqId: int, whiteBrandingId: str):
         super().userInfo(reqId, whiteBrandingId)
         print("UserInfo.", "ReqId:", reqId, "WhiteBrandingId:", whiteBrandingId)
-
-    # ! [userinfo]
 
     # Saves all tickData for every stock for every second
     def fetch_stock_data(self):
@@ -1541,7 +1505,6 @@ def main():
     args = cmdLineParser.parse_args()
     print("Using args", args)
     logging.debug("Using args %s", args)
-    # print(args)
 
     # enable logging when member vars are assigned
     from ibapi import utils
@@ -1560,15 +1523,12 @@ def main():
         app = TestApp()
         if args.global_cancel:
             app.globalCancelOnly = True
-        # ! [connect]
         app.connect("127.0.0.1", args.port, clientId=client_id)
-        # ! [connect]
         print("serverVersion:%s connectionTime:%s" % (app.serverVersion(),
                                                       app.twsConnectionTime()))
 
-        # ! [clientrun]
         app.run()
-        # ! [clientrun]
+
     except:
         raise
     finally:

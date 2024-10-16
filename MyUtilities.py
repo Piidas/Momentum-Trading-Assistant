@@ -13,7 +13,7 @@ import re
 class MyUtilities:
 
     @staticmethod
-    def feed_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, price):
+    def feed_price_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, price):
 
         if tick_type == "CLOSE":
             io_list.loc[req_id, 'CLOSE price [$]'] = price
