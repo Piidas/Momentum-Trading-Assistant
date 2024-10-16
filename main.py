@@ -35,50 +35,26 @@ from ibapi.tag_value import TagValue
 
 from MyUtilities import MyUtilities
 from MyOrders import MyOrders
+from ConstantsAndRules import market_constants
 
-# Constants and rule are defined here
-port = 7497   # PAPERTRADING
-# port = 7496
-max_stock_spread = 0.0125
-sell_half_reversal_rule = 0.06
-sell_full_reversal_rule = 0.1
-bad_close_rule = 0.15
-max_allowed_daily_pnl_loss = -0.05
-min_position_size = 0.001
-portfolio_update_prints = 0.1
+from ConstantsAndRules import (port, max_stock_spread, sell_half_reversal_rule, sell_full_reversal_rule, bad_close_rule,
+max_allowed_daily_pnl_loss, min_position_size, portfolio_update_prints)
 
-# TASK: Use only IB timezone
 which_markets_to_trade = input("\nDo you want to trade New York [NY], Japan [JP] or Germany [DE]?\n")
-if which_markets_to_trade == "JP":
-    market_has_pause = True
-    timezone = "Japan"
-    exr_rate = 150  # YEN per USD
-    name_of_dailytradingplan = "DailyTradingPlan_JP.xlsx"
-    name_of_dailytradingplan_save = "_trading_plan_JP.xlsx"
-    name_of_fetchdata_new_save = "_fetch_new_positions_JP.xlsx"
-    name_of_fetchdata_open_save = "_fetch_open_positions_JP.xlsx"
-    client_id = 11
-elif which_markets_to_trade == "NY":
-    market_has_pause = False
-    timezone = "America/New_York"
-    exr_rate = 1  # USD per USD
-    name_of_dailytradingplan = "DailyTradingPlan.xlsx"
-    name_of_dailytradingplan_save = "_trading_plan.xlsx"
-    name_of_fetchdata_new_save = "_fetch_new_positions.xlsx"
-    name_of_fetchdata_open_save = "_fetch_open_positions.xlsx"
-    client_id = 22
-elif which_markets_to_trade == "DE":
-    market_has_pause = False
-    timezone = "Europe/Berlin"
-    exr_rate = 0.91  # EUR per USD
-    name_of_dailytradingplan = "DailyTradingPlan_DE.xlsx"
-    name_of_dailytradingplan_save = "_trading_plan_DE.xlsx"
-    name_of_fetchdata_new_save = "_fetch_new_positions_DE.xlsx"
-    name_of_fetchdata_open_save = "_fetch_open_positions_DE.xlsx"
-    client_id = 33
-else:
+config = market_constants.get(which_markets_to_trade)
+
+if not config:
     print("Please restart the program and provide a valid entry.")
     exit()
+
+market_has_pause = config["market_has_pause"]
+timezone = config["timezone"]
+exr_rate = config["exr_rate"]
+name_of_dailytradingplan = config["name_of_dailytradingplan"]
+name_of_dailytradingplan_save = config["name_of_dailytradingplan_save"]
+name_of_fetchdata_new_save = config["name_of_fetchdata_new_save"]
+name_of_fetchdata_open_save = config["name_of_fetchdata_open_save"]
+client_id = config["client_id"]
 
 # Variables are defined here
 market_opening = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
@@ -1620,7 +1596,6 @@ class TestApp(TestWrapper, TestClient):
 
 def main():
     global client_id
-    global port
 
     SetupLogger()
     logging.debug("now is %s", datetime.datetime.now())
