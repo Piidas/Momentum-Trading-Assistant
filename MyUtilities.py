@@ -13,6 +13,35 @@ import re
 class MyUtilities:
 
     @staticmethod
+    def feed_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, price):
+
+        if tick_type == "CLOSE":
+            io_list.loc[req_id, 'CLOSE price [$]'] = price
+            io_list_copy_for_tick_data.loc[req_id, 'CLOSE price [$]'] = price
+
+        if tick_type == "BID":
+            io_list.loc[req_id, 'BID price [$]'] = price
+            io_list_copy_for_tick_data.loc[req_id, 'BID price [$]'] = price
+
+        if tick_type == "ASK":
+            io_list.loc[req_id, 'ASK price [$]'] = price
+            io_list_copy_for_tick_data.loc[req_id, 'ASK price [$]'] = price
+
+        if tick_type == "LAST":
+            io_list.loc[req_id, 'LAST price [$]'] = price
+            io_list_copy_for_tick_data.loc[req_id, 'LAST price [$]'] = price
+
+        if tick_type == "HIGH":
+            if pd.isnull(io_list['HIGH price [$]'][req_id]) or price > io_list['HIGH price [$]'][req_id]:
+                io_list.loc[req_id, 'HIGH price [$]'] = price
+
+        if tick_type == "LOW":
+            if pd.isnull(io_list['LOW price [$]'][req_id]) or price < io_list['LOW price [$]'][req_id]:
+                io_list.loc[req_id, 'LOW price [$]'] = price
+
+        return io_list, io_list_copy_for_tick_data
+
+    @staticmethod
     def get_contract_details(io_list, req_id: int):
 
         # Create contract details

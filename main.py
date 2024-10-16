@@ -101,7 +101,7 @@ tickData_open_position = tickData.copy()
 tickData_new_row = tickData.copy()
 
 # Ensures that indices are the same for both files
-iOListCopyForTickData = io_list
+io_list_copy_for_tick_data = io_list
 open_positions_iOList = io_list.copy()
 open_positions_iOList = open_positions_iOList.iloc[0:0]
 
@@ -363,7 +363,6 @@ class TestApp(TestWrapper, TestClient):
         return oid
 
     @iswrapper
-    # ! [error]
     def error(self, reqId: TickerId, errorCode: int, errorString: str, advancedOrderRejectJson=""):
         super().error(reqId, errorCode, errorString, advancedOrderRejectJson)
         if advancedOrderRejectJson:
@@ -372,19 +371,15 @@ class TestApp(TestWrapper, TestClient):
         else:
             print("Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
 
-    # ! [error] self.reqId2nErr[req_id] += 1
-
     @iswrapper
     def winError(self, text: str, lastError: int):
         super().winError(text, lastError)
 
     @iswrapper
-    # ! [orderstatus]
     def orderStatus(self, orderId: OrderId, status: str, filled: Decimal,
                     remaining: Decimal, avgFillPrice: float, permId: int,
                     parentId: int, lastFillPrice: float, clientId: int,
                     whyHeld: str, mktCapPrice: float):
-
         global io_list
         global old_orderids
         global last_orderStatus_message
@@ -415,67 +410,42 @@ class TestApp(TestWrapper, TestClient):
         io_list = MyUtilities.update_io_list_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
                                                                     io_list, timezone)
 
-    # ! [orderstatus]
-
     @printWhenExecuting
     def accountOperations_req(self):
-
         # Subscribing to an account's information. Only one at a time!
-        # ! [reqaaccountupdates]
         self.reqAccountUpdates(True, self.account)
-        # ! [reqaaccountupdates]
-
         # Requesting all accounts' positions.
-        # ! [reqpositions]
         self.reqPositions()
-        # ! [reqpositions]
 
     @printWhenExecuting
     def accountOperations_cancel(self):
-
-        # ! [cancelaaccountupdates]
         self.reqAccountUpdates(False, self.account)
-        # ! [cancelaaccountupdates]
-
-        # ! [cancelpositions]
         self.cancelPositions()
-        # ! [cancelpositions]
 
     @iswrapper
-    # ! [managedaccounts]
     def managedAccounts(self, accountsList: str):
         super().managedAccounts(accountsList)
         print("Account list:", accountsList)
-        # ! [managedaccounts]
-
         self.account = accountsList.split(",")[0]
 
         if self.nextValidOrderId is not None:
             self.start()
 
     @iswrapper
-    # ! [accountsummary]
     def accountSummary(self, reqId: int, account: str, tag: str, value: str,
                        currency: str):
         super().accountSummary(reqId, account, tag, value, currency)
         print("AccountSummary. ReqId:", reqId, "Account:", account,
               "Tag: ", tag, "Value:", value, "Currency:", currency)
 
-    # ! [accountsummary]
-
     @iswrapper
-    # ! [accountsummaryend]
     def accountSummaryEnd(self, reqId: int):
         super().accountSummaryEnd(reqId)
         print("AccountSummaryEnd. ReqId:", reqId)
 
-    # ! [accountsummaryend]
-
     @iswrapper
-    # ! [updateaccountvalue]
     def updateAccountValue(self, key: str, val: str, currency: str,
                            accountName: str):
-
         global gross_position_value
         global portfolio_size
         global percent_invested
@@ -521,18 +491,12 @@ class TestApp(TestWrapper, TestClient):
                                              unrealized_PnL, unrealized_PnL_percent_last, max_allowed_daily_pnl_loss,
                                              max_daily_loss_reached, timezone, portfolio_update_prints))
 
-    # ! [updateaccountvalue]
-
     @iswrapper
-    # ! [accountdownloadend]
     def accountDownloadEnd(self, accountName: str):
         super().accountDownloadEnd(accountName)
         print("AccountDownloadEnd. Account:", accountName)
 
-    # ! [accountdownloadend]
-
     @iswrapper
-    # ! [position]
     def position(self, account: str, contract: Contract, position: Decimal,
                  avgCost: float):
 
@@ -548,26 +512,19 @@ class TestApp(TestWrapper, TestClient):
             open_positions_iOList = MyUtilities.check_open_orders(open_positions_iOList, contract.symbol,
                                                                   contract.currency, decimalMaxString(position))
 
-    # ! [position]
-
     @iswrapper
-    # ! [positionend]
     def positionEnd(self):
         super().positionEnd()
         print("PositionEnd")
 
     @iswrapper
-    # ! [pnl]
     def pnl(self, reqId: int, dailyPnL: float,
             unrealizedPnL: float, realizedPnL: float):
         super().pnl(reqId, dailyPnL, unrealizedPnL, realizedPnL)
         print("Daily PnL. ReqId:", reqId, "DailyPnL:", floatMaxString(dailyPnL),
               "UnrealizedPnL:", floatMaxString(unrealizedPnL), "RealizedPnL:", floatMaxString(realizedPnL))
 
-    # ! [pnl]
-
     @iswrapper
-    # ! [pnlsingle]
     def pnlSingle(self, reqId: int, pos: Decimal, dailyPnL: float,
                   unrealizedPnL: float, realizedPnL: float, value: float):
         super().pnlSingle(reqId, pos, dailyPnL, unrealizedPnL, realizedPnL, value)
@@ -575,13 +532,9 @@ class TestApp(TestWrapper, TestClient):
               "DailyPnL:", floatMaxString(dailyPnL), "UnrealizedPnL:", floatMaxString(unrealizedPnL),
               "RealizedPnL:", floatMaxString(realizedPnL), "Value:", floatMaxString(value))
 
-    # ! [pnlsingle]
-
     def marketDataTypeOperations(self):
-        # ! [reqmarketdatatype]
         # Switch to live (1) frozen (2) delayed (3) delayed frozen (4).
         self.reqMarketDataType(MarketDataTypeEnum.REALTIME)
-        # ! [reqmarketdatatype]
 
     @printWhenExecuting
     def tickDataOperations_req(self):
@@ -595,19 +548,17 @@ class TestApp(TestWrapper, TestClient):
     @printWhenExecuting
     def tickDataOperations_cancel(self):
         # Canceling the market data subscription
-        # ! [cancelmktdata]
         for i in range(len(io_list)):
             self.cancelMktData(i)
 
     @iswrapper
-    # ! [tickprice]
     def tickPrice(self, reqId: TickerId, tickType: TickType, price: float,
                   attrib: TickAttrib):
         super().tickPrice(reqId, tickType, price, attrib)
 
         global io_list
         global fetch_data_triggered
-        global iOListCopyForTickData
+        global io_list_copy_for_tick_data
         global all_orders_cancelled
         global daily_brackets_submitted
         global markets_are_open
@@ -623,7 +574,6 @@ class TestApp(TestWrapper, TestClient):
 
         if time_now > time_algo_starts + datetime.timedelta(minutes=1) and not open_positions_check_done:
             MyUtilities.compare_positions_currency_specific(open_positions_iOList, io_list)
-
             open_positions_check_done = True
 
         # Sets marker True if market opening hours are defined
@@ -668,37 +618,16 @@ class TestApp(TestWrapper, TestClient):
         previous_markets_are_open = markets_are_open
 
         # Allocates all relevant tickTypes to their respective field
-        if TickTypeEnum.toStr(tickType) == "CLOSE":
-            io_list.loc[reqId, 'CLOSE price [$]'] = price
-            iOListCopyForTickData.loc[reqId, 'CLOSE price [$]'] = price
+        io_list, io_list_copy_for_tick_data = MyUtilities.feed_io_lists(io_list, io_list_copy_for_tick_data,
+                                                                        TickTypeEnum.toStr(tickType), reqId, price)
 
-        if TickTypeEnum.toStr(tickType) == "BID":
-            io_list.loc[reqId, 'BID price [$]'] = price
-            iOListCopyForTickData.loc[reqId, 'BID price [$]'] = price
-
-        if TickTypeEnum.toStr(tickType) == "ASK":
-            io_list.loc[reqId, 'ASK price [$]'] = price
-            iOListCopyForTickData.loc[reqId, 'ASK price [$]'] = price
-
-        if TickTypeEnum.toStr(tickType) == "LAST":
-            io_list.loc[reqId, 'LAST price [$]'] = price
-            iOListCopyForTickData.loc[reqId, 'LAST price [$]'] = price
-
-        if TickTypeEnum.toStr(tickType) == "HIGH":
-            if pd.isnull(io_list['HIGH price [$]'][reqId]) or price > io_list['HIGH price [$]'][reqId]:
-                io_list.loc[reqId, 'HIGH price [$]'] = price
-
-        if TickTypeEnum.toStr(tickType) == "LOW":
-            if pd.isnull(io_list['LOW price [$]'][reqId]) or price < io_list['LOW price [$]'][reqId]:
-                io_list.loc[reqId, 'LOW price [$]'] = price
-
-        # Start function fetch_stock_data() only once
+        # Start function fetch_stock_data() only oncetick_type
         if not fetch_data_triggered and markets_are_open:
             fetch_stock_data_thread = threading.Thread(target=self.fetch_stock_data, daemon=False)
             fetch_stock_data_thread.start()
             fetch_data_triggered = True
 
-        # Continues only when US_market_hours are defined
+        # Continues only when market_hours are defined
         if not market_opening_hours_defined:
             return
 
@@ -855,10 +784,10 @@ class TestApp(TestWrapper, TestClient):
                     # Must come first to avoid errors due to index j exceeding len(io_list)
                     if j >= len(io_list):
 
-                        # Adds the new row to io_list and iOListCopyForTickData for fetching function
+                        # Adds the new row to io_list and io_list_copy_for_tick_data for fetching function
                         io_list = pd.concat([io_list, io_list_update.iloc[[j]]], ignore_index=True)
-                        iOListCopyForTickData = pd.concat([iOListCopyForTickData, io_list_update.iloc[[j]]],
-                                                          ignore_index=True)
+                        io_list_copy_for_tick_data = pd.concat([io_list_copy_for_tick_data, io_list_update.iloc[[j]]],
+                                                               ignore_index=True)
 
                         # Requests contract details and market data
                         contract = MyUtilities.get_contract_details(io_list, j)
@@ -1334,19 +1263,19 @@ class TestApp(TestWrapper, TestClient):
         super().tickSize(reqId, tickType, size)
         # print("TickSize. TickerId:", req_id, "TickType:", tickType, "Size: ", decimalMaxString(size))
         global io_list
-        global iOListCopyForTickData
+        global io_list_copy_for_tick_data
 
         if TickTypeEnum.toStr(tickType) == "ASK_SIZE":
             io_list.loc[reqId, 'ASK size'] = float(size)
-            iOListCopyForTickData.loc[reqId, 'ASK size'] = float(size)
+            io_list_copy_for_tick_data.loc[reqId, 'ASK size'] = float(size)
 
         if TickTypeEnum.toStr(tickType) == "BID_SIZE":
             io_list.loc[reqId, 'BID size'] = float(size)
-            iOListCopyForTickData.loc[reqId, 'BID size'] = float(size)
+            io_list_copy_for_tick_data.loc[reqId, 'BID size'] = float(size)
 
         if TickTypeEnum.toStr(tickType) == "VOLUME":
             io_list.loc[reqId, 'Volume'] = float(size)
-            iOListCopyForTickData.loc[reqId, 'Volume'] = float(size)
+            io_list_copy_for_tick_data.loc[reqId, 'Volume'] = float(size)
 
     # ! [ticksize]
 
@@ -1534,35 +1463,35 @@ class TestApp(TestWrapper, TestClient):
         # When saving this dataframe as excel at the end, ~44 different stocks can be saved
         while market_close + datetime.timedelta(seconds=1) >= time_now_fetch >= market_opening:
 
-            for i in range(len(iOListCopyForTickData)):
+            for i in range(len(io_list_copy_for_tick_data)):
 
                 # Stocks meeting these criteria are skipped and shall only prevent the code from "falling asleep"
-                if iOListCopyForTickData['Entry price [$]'][i] == 9 and \
-                        iOListCopyForTickData['Stop price [$]'][i] == 11:
+                if io_list_copy_for_tick_data['Entry price [$]'][i] == 9 and \
+                        io_list_copy_for_tick_data['Stop price [$]'][i] == 11:
                     continue
 
                 # Only seeks to append data once per symbol for open position and once for new position in case
-                if i > 0 and iOListCopyForTickData['Symbol'][i] == iOListCopyForTickData['Symbol'][i - 1] and \
-                        (iOListCopyForTickData['Open position'][i] == iOListCopyForTickData['Open position'][i - 1] or
+                if i > 0 and io_list_copy_for_tick_data['Symbol'][i] == io_list_copy_for_tick_data['Symbol'][i - 1] and \
+                        (io_list_copy_for_tick_data['Open position'][i] == io_list_copy_for_tick_data['Open position'][i - 1] or
                          (
-                                 not iOListCopyForTickData['Open position'][i] and
-                                 not iOListCopyForTickData['Open position'][i - 1]
+                                 not io_list_copy_for_tick_data['Open position'][i] and
+                                 not io_list_copy_for_tick_data['Open position'][i - 1]
                          )
                         ):
                     pass
                 else:
                     # Fills row to append in pd dataframe
                     tickData_new_row.loc[0, 'timeStamp'] = time_now_fetch_str
-                    tickData_new_row.loc[0, 'Symbol'] = iOListCopyForTickData['Symbol'][i]
-                    tickData_new_row.loc[0, 'CLOSE price [$]'] = iOListCopyForTickData['CLOSE price [$]'][i]
-                    tickData_new_row.loc[0, 'BID price [$]'] = iOListCopyForTickData['BID price [$]'][i]
-                    tickData_new_row.loc[0, 'ASK price [$]'] = iOListCopyForTickData['ASK price [$]'][i]
-                    tickData_new_row.loc[0, 'LAST price [$]'] = iOListCopyForTickData['LAST price [$]'][i]
-                    tickData_new_row.loc[0, 'ASK size'] = iOListCopyForTickData['ASK size'][i]
-                    tickData_new_row.loc[0, 'BID size'] = iOListCopyForTickData['BID size'][i]
-                    tickData_new_row.loc[0, 'Volume'] = iOListCopyForTickData['Volume'][i]
+                    tickData_new_row.loc[0, 'Symbol'] = io_list_copy_for_tick_data['Symbol'][i]
+                    tickData_new_row.loc[0, 'CLOSE price [$]'] = io_list_copy_for_tick_data['CLOSE price [$]'][i]
+                    tickData_new_row.loc[0, 'BID price [$]'] = io_list_copy_for_tick_data['BID price [$]'][i]
+                    tickData_new_row.loc[0, 'ASK price [$]'] = io_list_copy_for_tick_data['ASK price [$]'][i]
+                    tickData_new_row.loc[0, 'LAST price [$]'] = io_list_copy_for_tick_data['LAST price [$]'][i]
+                    tickData_new_row.loc[0, 'ASK size'] = io_list_copy_for_tick_data['ASK size'][i]
+                    tickData_new_row.loc[0, 'BID size'] = io_list_copy_for_tick_data['BID size'][i]
+                    tickData_new_row.loc[0, 'Volume'] = io_list_copy_for_tick_data['Volume'][i]
 
-                    if not iOListCopyForTickData['Open position'][i]:
+                    if not io_list_copy_for_tick_data['Open position'][i]:
                         # Appends row to tickData
                         tickData = pd.concat([tickData, tickData_new_row], ignore_index=True)
 
