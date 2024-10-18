@@ -28,7 +28,7 @@ This section contains all necessary steps you need to get MTA up and running:
 
   3) Subscribe to the relevant market data on you IB-account
 
-  4) Save `main.py`, `MyOrders.py`, `MyUtilities.py`, `tickDataTemplate.xlsx` and `DailyTradingPlan.xlsx` in one folder of your choice
+  4) Save `main.py`, `MyOrders.py`, `MyUtilities.py`, `ConstantsAndRules.py`, `tickDataTemplate.xlsx` and `DailyTradingPlan.xlsx` in one folder of your choice
 
   5) Fill columns A, B and D to M of `DailyTradingPlan.xlsx`
 
@@ -47,23 +47,16 @@ It is recommended but not necessary to start MTA before the market opens.
 As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires five files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
 
   - [`main.py`](/main.py)
-
   - [`MyOrders.py`](/MyOrders.py)
-
   - [`MyUtilities.py`](/MyUtilities.py)
-
+  - [`ConstantsAndRules.py`](/ConstantsAndRules.py)
   - [`tickDataTemplate.xlsx`](/tickDataTemplate.xlsx)
-
   - [`DailyTradingPlan.xlsx`](/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
-
-
 
 The program will return the following three files as output:
 
   - `yymmdd_fetch_open_positions.xlsx`
-
   - `yymmdd_fetch_new_positions.xlsx`
-
   - `yymmdd_trading_plan.xlsx`
 
 
