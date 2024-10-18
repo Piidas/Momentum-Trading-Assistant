@@ -441,3 +441,48 @@ class MyUtilities:
                     return True
 
         return False
+
+    @staticmethod
+    def append_fetch_data(tick_data, tick_data_open_position, tick_data_new_row, io_list_copy_for_tick_data, timezone):
+
+        time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+        time_now_fetch_str = time_now_fetch.strftime("%y%m%d %H:%M:%S")
+
+        for i in range(len(io_list_copy_for_tick_data)):
+
+            # Stocks meeting these criteria are skipped and shall only prevent the code from "falling asleep"
+            if io_list_copy_for_tick_data['Entry price [$]'][i] == 9 and \
+                    io_list_copy_for_tick_data['Stop price [$]'][i] == 11:
+                continue
+
+            # Only seeks to append data once per symbol for open position and once for new position in case
+            if i > 0 and io_list_copy_for_tick_data['Symbol'][i] == io_list_copy_for_tick_data['Symbol'][i - 1] and \
+                    (io_list_copy_for_tick_data['Open position'][i] == io_list_copy_for_tick_data['Open position'][i - 1] or
+                     (
+                             not io_list_copy_for_tick_data['Open position'][i] and
+                             not io_list_copy_for_tick_data['Open position'][i - 1]
+                     )
+                    ):
+                pass
+            else:
+                # Fills row to append in pd dataframe
+                tick_data_new_row.loc[0, 'timeStamp'] = time_now_fetch_str
+                tick_data_new_row.loc[0, 'Symbol'] = io_list_copy_for_tick_data['Symbol'][i]
+                tick_data_new_row.loc[0, 'CLOSE price [$]'] = io_list_copy_for_tick_data['CLOSE price [$]'][i]
+                tick_data_new_row.loc[0, 'BID price [$]'] = io_list_copy_for_tick_data['BID price [$]'][i]
+                tick_data_new_row.loc[0, 'ASK price [$]'] = io_list_copy_for_tick_data['ASK price [$]'][i]
+                tick_data_new_row.loc[0, 'LAST price [$]'] = io_list_copy_for_tick_data['LAST price [$]'][i]
+                tick_data_new_row.loc[0, 'ASK size'] = io_list_copy_for_tick_data['ASK size'][i]
+                tick_data_new_row.loc[0, 'BID size'] = io_list_copy_for_tick_data['BID size'][i]
+                tick_data_new_row.loc[0, 'Volume'] = io_list_copy_for_tick_data['Volume'][i]
+
+                if not io_list_copy_for_tick_data['Open position'][i]:
+                    # Appends row to tick_data
+                    tick_data = pd.concat([tick_data, tick_data_new_row], ignore_index=True)
+
+                else:
+                    # Appends row to tick_data_open_position
+                    tick_data_open_position = pd.concat([tick_data_open_position, tick_data_new_row],
+                                                        ignore_index=True)
+
+        return tick_data, tick_data_open_position

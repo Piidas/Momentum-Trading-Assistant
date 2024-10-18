@@ -89,16 +89,16 @@ open_positions_check_done = False
 last_orderStatus_message = {}
 
 io_list = pd.read_excel(name_of_dailytradingplan, index_col=0)
-tickData = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
+tick_data = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
 
-io_list, tickData = MyUtilities.data_frame_clean_up(io_list, tickData, return_both_dataframes=True)
+io_list, tick_data = MyUtilities.data_frame_clean_up(io_list, tick_data, return_both_dataframes=True)
 
 io_list = MyUtilities.document_trading_parameters(io_list, max_stock_spread, sell_half_reversal_rule,
                                                   sell_full_reversal_rule, bad_close_rule, max_allowed_daily_pnl_loss,
                                                   min_position_size)
 
-tickData_open_position = tickData.copy()
-tickData_new_row = tickData.copy()
+tick_data_open_position = tick_data.copy()
+tick_data_new_row = tick_data.copy()
 
 # Ensures that indices are the same for both files
 io_list_copy_for_tick_data = io_list
@@ -776,7 +776,7 @@ class TestApp(TestWrapper, TestClient):
 
             if success_reading_xls:
                 # Applies the necessary datatypes again
-                io_list_update = MyUtilities.data_frame_clean_up(io_list_update, tickData, return_both_dataframes=False)
+                io_list_update = MyUtilities.data_frame_clean_up(io_list_update, tick_data, return_both_dataframes=False)
 
                 for j in range(len(io_list_update)):
 
@@ -1264,8 +1264,7 @@ class TestApp(TestWrapper, TestClient):
 
         # Allocates all relevant tickTypes to their respective field
         io_list, io_list_copy_for_tick_data = MyUtilities.feed_size_io_lists(io_list, io_list_copy_for_tick_data,
-                                                                              TickTypeEnum.toStr(tickType), reqId,
-                                                                              size)
+                                                                              TickTypeEnum.toStr(tickType), reqId, size)
 
     @iswrapper
     def tickGeneric(self, reqId: TickerId, tickType: TickType, value: float):
@@ -1406,75 +1405,41 @@ class TestApp(TestWrapper, TestClient):
         super().userInfo(reqId, whiteBrandingId)
         print("UserInfo.", "ReqId:", reqId, "WhiteBrandingId:", whiteBrandingId)
 
-    # Saves all tickData for every stock for every second
+    # Saves all tick_data for every stock for every second
     def fetch_stock_data(self):
-        global tickData
-        global tickData_open_position
-        global tickData_new_row
+        global tick_data
+        global tick_data_open_position
+        global tick_data_new_row
 
         time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
-        time_now_fetch_str = time_now_fetch.strftime("%y%m%d %H:%M:%S")
 
         print("\nFetch stock data function is started.\n")
-        # Writes the tickData for each ticker to pd dataframe every second for later analysis
+        # Writes the tick_data for each ticker to pd dataframe every second for later analysis
         # When saving this dataframe as excel at the end, ~44 different stocks can be saved
         while market_close + datetime.timedelta(seconds=1) >= time_now_fetch >= market_opening:
 
-            for i in range(len(io_list_copy_for_tick_data)):
-
-                # Stocks meeting these criteria are skipped and shall only prevent the code from "falling asleep"
-                if io_list_copy_for_tick_data['Entry price [$]'][i] == 9 and \
-                        io_list_copy_for_tick_data['Stop price [$]'][i] == 11:
-                    continue
-
-                # Only seeks to append data once per symbol for open position and once for new position in case
-                if i > 0 and io_list_copy_for_tick_data['Symbol'][i] == io_list_copy_for_tick_data['Symbol'][i - 1] and \
-                        (io_list_copy_for_tick_data['Open position'][i] == io_list_copy_for_tick_data['Open position'][i - 1] or
-                         (
-                                 not io_list_copy_for_tick_data['Open position'][i] and
-                                 not io_list_copy_for_tick_data['Open position'][i - 1]
-                         )
-                        ):
-                    pass
-                else:
-                    # Fills row to append in pd dataframe
-                    tickData_new_row.loc[0, 'timeStamp'] = time_now_fetch_str
-                    tickData_new_row.loc[0, 'Symbol'] = io_list_copy_for_tick_data['Symbol'][i]
-                    tickData_new_row.loc[0, 'CLOSE price [$]'] = io_list_copy_for_tick_data['CLOSE price [$]'][i]
-                    tickData_new_row.loc[0, 'BID price [$]'] = io_list_copy_for_tick_data['BID price [$]'][i]
-                    tickData_new_row.loc[0, 'ASK price [$]'] = io_list_copy_for_tick_data['ASK price [$]'][i]
-                    tickData_new_row.loc[0, 'LAST price [$]'] = io_list_copy_for_tick_data['LAST price [$]'][i]
-                    tickData_new_row.loc[0, 'ASK size'] = io_list_copy_for_tick_data['ASK size'][i]
-                    tickData_new_row.loc[0, 'BID size'] = io_list_copy_for_tick_data['BID size'][i]
-                    tickData_new_row.loc[0, 'Volume'] = io_list_copy_for_tick_data['Volume'][i]
-
-                    if not io_list_copy_for_tick_data['Open position'][i]:
-                        # Appends row to tickData
-                        tickData = pd.concat([tickData, tickData_new_row], ignore_index=True)
-
-                    else:
-                        # Appends row to tickData_open_position
-                        tickData_open_position = pd.concat([tickData_open_position, tickData_new_row],
-                                                           ignore_index=True)
+            # Appends fetch data to relevant files
+            tick_data, tick_data_open_position = MyUtilities.append_fetch_data(tick_data, tick_data_open_position,
+                                                                               tick_data_new_row,
+                                                                               io_list_copy_for_tick_data, timezone)
 
             # Pauses while-loop for one second until the next round
             time.sleep(1)
 
             time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
-            time_now_fetch_str = time_now_fetch.strftime("%y%m%d %H:%M:%S")
 
         filename = market_close.strftime("%y%m%d") + name_of_dailytradingplan_save
         MyUtilities.save_excel_outputs(filename, io_list)
 
         # Avoids saving an Excel file if no new positions are in DailyTradingPlan
-        if len(tickData) > 100:
+        if len(tick_data) > 100:
             filename = market_close.strftime("%y%m%d") + name_of_fetchdata_new_save
-            MyUtilities.save_excel_outputs(filename, tickData)
+            MyUtilities.save_excel_outputs(filename, tick_data)
 
         # Avoids saving an Excel file if no open positions are in DailyTradingPlan
-        if len(tickData_open_position) > 100:
+        if len(tick_data_open_position) > 100:
             filename = market_close.strftime("%y%m%d") + name_of_fetchdata_open_save
-            MyUtilities.save_excel_outputs(filename, tickData_open_position)
+            MyUtilities.save_excel_outputs(filename, tick_data_open_position)
 
         # Return to close the thread, since daemon=False. "sys.exit()" is an alternative.
         return
