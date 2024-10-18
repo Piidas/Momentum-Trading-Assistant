@@ -126,13 +126,9 @@ def SetupLogger():
         os.makedirs("log")
 
     time.strftime("pyibapi.%Y%m%d_%H%M%S.log")
-
     recfmt = '(%(threadName)s) %(asctime)s.%(msecs)03d %(levelname)s %(filename)s:%(lineno)d %(message)s'
-
     timefmt = '%y%m%d_%H:%M:%S'
 
-    # logging.basicConfig( level=logging.DEBUG,
-    #                    format=recfmt, datefmt=timefmt)
     logging.basicConfig(filename=time.strftime("log/pyibapi.%y%m%d_%H%M%S.log"),
                         filemode="w",
                         level=logging.INFO,
@@ -150,20 +146,6 @@ def printWhenExecuting(fn):
         print("   done w/", fn.__name__)
 
     return fn2
-
-
-def printinstance(inst: Object):
-    attrs = vars(inst)
-    print(', '.join(
-        '{}:{}'.format(
-            key,
-            decimalMaxString(value) if type(value) is Decimal else
-            floatMaxString(value) if type(value) is float else
-            intMaxString(value) if type(value) is int else
-            value
-        )
-        for key, value in attrs.items()
-    ))
 
 
 class Activity(Object):
@@ -191,7 +173,6 @@ class RequestMgr(Object):
 class TestClient(EClient):
     def __init__(self, wrapper):
         EClient.__init__(self, wrapper)
-        # ! [socket_declare]
 
         # how many times a method is called to see test coverage
         self.clntMeth2callCount = collections.defaultdict(int)
@@ -229,9 +210,8 @@ class TestClient(EClient):
                 # print("TestClient.clntMeth2reqIdIdx", self.clntMeth2reqIdIdx)
 
 
-# ! [ewrapperimpl]
 class TestWrapper(wrapper.EWrapper):
-    # ! [ewrapperimpl]
+
     def __init__(self):
         wrapper.EWrapper.__init__(self)
 
@@ -239,8 +219,6 @@ class TestWrapper(wrapper.EWrapper):
         self.wrapMeth2reqIdIdx = collections.defaultdict(lambda: -1)
         self.reqId2nAns = collections.defaultdict(int)
         self.setupDetectWrapperReqId()
-
-    # TODO: see how to factor this out !!
 
     def countWrapReqId(self, methName, fn):
         def countWrapReqId_(*args, **kwargs):
@@ -267,10 +245,7 @@ class TestWrapper(wrapper.EWrapper):
 
             setattr(TestWrapper, methName, self.countWrapReqId(methName, meth))
 
-            # print("TestClient.wrapMeth2reqIdIdx", self.wrapMeth2reqIdIdx)
 
-
-# ! [socket_init]
 class TestApp(TestWrapper, TestClient):
     def __init__(self):
         TestWrapper.__init__(self)
@@ -302,15 +277,11 @@ class TestApp(TestWrapper, TestClient):
             logging.debug("%d\t%d\t%s\t%d" % (reqId, nReq, nAns, nErr))
 
     @iswrapper
-    # ! [connectack]
     def connectAck(self):
         if self.asynchronous:
             self.startApi()
 
-    # ! [connectack]
-
     @iswrapper
-    # ! [nextvalidid]
     def nextValidId(self, orderId: int):
 
         super().nextValidId(orderId)
@@ -318,7 +289,6 @@ class TestApp(TestWrapper, TestClient):
         logging.debug("setting nextValidOrderId: %d", orderId)
         self.nextValidOrderId = orderId
         print("NextValidId:", orderId)
-        # ! [nextvalidid]
 
         # we can start now
         if hasattr(self, 'account'):
@@ -335,7 +305,6 @@ class TestApp(TestWrapper, TestClient):
             self.reqGlobalCancel()
         else:
             print("Executing requests")
-            # self.reqGlobalCancel()
             self.marketDataTypeOperations()
             self.accountOperations_req()
             self.tickDataOperations_req()
@@ -414,7 +383,6 @@ class TestApp(TestWrapper, TestClient):
     def accountOperations_req(self):
         # Subscribing to an account's information. Only one at a time!
         self.reqAccountUpdates(True, self.account)
-        # Requesting all accounts' positions.
         self.reqPositions()
 
     @printWhenExecuting
@@ -1380,20 +1348,18 @@ class TestApp(TestWrapper, TestClient):
                        orderState: OrderState):
         super().completedOrder(contract, order, orderState)
         print("CompletedOrder. PermId:", intMaxString(order.permId), "ParentPermId:", longMaxString(order.parentPermId),
-              "Account:", order.account,
-              "Symbol:", contract.symbol, "SecType:", contract.secType, "Exchange:", contract.exchange,
-              "Action:", order.action, "OrderType:", order.orderType, "TotalQty:",
-              decimalMaxString(order.totalQuantity),
-              "CashQty:", floatMaxString(order.cashQty), "FilledQty:", decimalMaxString(order.filledQuantity),
-              "LmtPrice:", floatMaxString(order.lmtPrice), "AuxPrice:", floatMaxString(order.auxPrice), "Status:",
-              orderState.status,
+              "Account:", order.account, "Symbol:", contract.symbol, "SecType:", contract.secType,
+              "Exchange:", contract.exchange, "Action:", order.action, "OrderType:", order.orderType,
+              "TotalQty:", decimalMaxString(order.totalQuantity), "CashQty:", floatMaxString(order.cashQty),
+              "FilledQty:", decimalMaxString(order.filledQuantity), "LmtPrice:", floatMaxString(order.lmtPrice),
+              "AuxPrice:", floatMaxString(order.auxPrice), "Status:", orderState.status,
               "Completed time:", orderState.completedTime, "Completed Status:" + orderState.completedStatus,
               "MinTradeQty:", intMaxString(order.minTradeQty), "MinCompeteSize:", intMaxString(order.minCompeteSize),
               "competeAgainstBestOffset:",
               "UpToMid" if order.competeAgainstBestOffset == COMPETE_AGAINST_BEST_OFFSET_UP_TO_MID else floatMaxString(
                   order.competeAgainstBestOffset),
-              "MidOffsetAtWhole:", floatMaxString(order.midOffsetAtWhole), "MidOffsetAtHalf:",
-              floatMaxString(order.midOffsetAtHalf))
+              "MidOffsetAtWhole:", floatMaxString(order.midOffsetAtWhole),
+              "MidOffsetAtHalf:", floatMaxString(order.midOffsetAtHalf))
 
     @iswrapper
     def completedOrdersEnd(self):
@@ -1453,8 +1419,6 @@ def main():
     logging.getLogger().setLevel(logging.ERROR)
 
     cmdLineParser = argparse.ArgumentParser("api tests")
-    # cmdLineParser.add_option("-c", action="store_True", dest="use_cache", default = False, help = "use the cache")
-    # cmdLineParser.add_option("-f", action="store", type="string", dest="file", default="", help="the input file")
     cmdLineParser.add_argument("-p", "--port", action="store", type=int,
                                dest="port", default=port, help="The TCP port to use")
     cmdLineParser.add_argument("-C", "--global-cancel", action="store_true",
