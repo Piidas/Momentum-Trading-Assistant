@@ -131,12 +131,12 @@ class MyUtilities:
     def document_trading_parameters(trading_plan, max_stock_spread, sell_half_reversal_rule, sell_full_reversal_rule,
                                     bad_close_rule, max_allowed_daily_pnl_loss, min_position_size):
 
-        trading_plan.loc[0, 'max_stock_spread'] = max_stock_spread
-        trading_plan.loc[0, 'sell_half_reversal_rule'] = sell_half_reversal_rule
-        trading_plan.loc[0, 'sell_full_reversal_rule'] = sell_full_reversal_rule
-        trading_plan.loc[0, 'bad_close_rule'] = bad_close_rule
-        trading_plan.loc[0, 'max_allowed_daily_pnl_loss'] = max_allowed_daily_pnl_loss
-        trading_plan.loc[0, 'min_position_size'] = min_position_size
+        trading_plan.loc[0, 'MAX_STOCK_SPREAD'] = max_stock_spread
+        trading_plan.loc[0, 'SELL_HALF_REVERSAL_RULE'] = sell_half_reversal_rule
+        trading_plan.loc[0, 'SELL_FULL_REVERSAL_RULE'] = sell_full_reversal_rule
+        trading_plan.loc[0, 'BAD_CLOSE_RULE'] = bad_close_rule
+        trading_plan.loc[0, 'MAX_ALLOWED_DAILY_PNL_LOSS'] = max_allowed_daily_pnl_loss
+        trading_plan.loc[0, 'MIN_POSITION_SIZE'] = min_position_size
 
         return trading_plan
 
@@ -406,7 +406,7 @@ class MyUtilities:
             # Convert the earnings_date_str to a datetime object (naive)
             earnings_date_naive = datetime.datetime.strptime(earnings_date_str, '%B %d, %Y')
 
-            # Make the earnings_date aware by localizing it to the same timezone as reference_date
+            # Make the earnings_date aware by localizing it to the same TIMEZONE as reference_date
             reference_tz = reference_date.tzinfo
             earnings_date_aware = reference_tz.localize(earnings_date_naive)
 

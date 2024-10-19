@@ -37,8 +37,8 @@ from MyUtilities import MyUtilities
 from MyOrders import MyOrders
 from ConstantsAndRules import market_constants
 
-from ConstantsAndRules import (port, max_stock_spread, sell_half_reversal_rule, sell_full_reversal_rule, bad_close_rule,
-max_allowed_daily_pnl_loss, min_position_size, portfolio_update_prints)
+from ConstantsAndRules import (PORT, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE, SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE,
+                               MAX_ALLOWED_DAILY_PNL_LOSS, MIN_POSITION_SIZE, PORTFOLIO_UPDATE_PRINTS)
 
 which_markets_to_trade = input("\nDo you want to trade New York [NY], Japan [JP] or Germany [DE]?\n")
 config = market_constants.get(which_markets_to_trade)
@@ -47,27 +47,27 @@ if not config:
     print("Please restart the program and provide a valid entry.")
     exit()
 
-market_has_pause = config["market_has_pause"]
-timezone = config["timezone"]
-exr_rate = config["exr_rate"]
-name_of_dailytradingplan = config["name_of_dailytradingplan"]
-name_of_dailytradingplan_save = config["name_of_dailytradingplan_save"]
-name_of_fetchdata_new_save = config["name_of_fetchdata_new_save"]
-name_of_fetchdata_open_save = config["name_of_fetchdata_open_save"]
-client_id = config["client_id"]
+MARKET_HAS_PAUSE = config["MARKET_HAS_PAUSE"]
+TIMEZONE = config["TIMEZONE"]
+EXR_RATE = config["EXR_RATE"]
+NAME_OF_DAILYTRADINGPLAN = config["NAME_OF_DAILYTRADINGPLAN"]
+NAME_OF_DAILYTRADINGPLAN_SAVE = config["NAME_OF_DAILYTRADINGPLAN_SAVE"]
+NAME_OF_FETCHDATA_NEW_SAVE = config["NAME_OF_FETCHDATA_NEW_SAVE"]
+NAME_OF_FETCHDATA_OPEN_SAVE = config["NAME_OF_FETCHDATA_OPEN_SAVE"]
+CLIENT_ID = config["CLIENT_ID"]
 
 # Variables are defined here
-market_opening = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
-market_close = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=30)
-market_pause_start = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
-market_pause_end = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - datetime.timedelta(days=31)
+market_opening = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
+market_close = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=30)
+market_pause_start = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
+market_pause_end = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
 ib_timezone_str = ""
 markets_are_open = False
 previous_markets_are_open = False
 all_opening_hours = []
-market_open_print_timestamp = datetime.datetime.now().astimezone(pytz.timezone(timezone))
-update_DailyTradingPlan_timestamp = datetime.datetime.now().astimezone(pytz.timezone(timezone))
-time_algo_starts = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+market_open_print_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+update_DailyTradingPlan_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
+time_algo_starts = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
 market_opening_hours_defined = False
 fetch_data_triggered = False
 daily_brackets_submitted = False
@@ -88,14 +88,14 @@ fetch_stock_data_thread = None
 open_positions_check_done = False
 last_orderStatus_message = {}
 
-io_list = pd.read_excel(name_of_dailytradingplan, index_col=0)
+io_list = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 tick_data = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
 
 io_list, tick_data = MyUtilities.data_frame_clean_up(io_list, tick_data, return_both_dataframes=True)
 
-io_list = MyUtilities.document_trading_parameters(io_list, max_stock_spread, sell_half_reversal_rule,
-                                                  sell_full_reversal_rule, bad_close_rule, max_allowed_daily_pnl_loss,
-                                                  min_position_size)
+io_list = MyUtilities.document_trading_parameters(io_list, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE,
+                                                  SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE, MAX_ALLOWED_DAILY_PNL_LOSS,
+                                                  MIN_POSITION_SIZE)
 
 tick_data_open_position = tick_data.copy()
 tick_data_new_row = tick_data.copy()
@@ -106,7 +106,7 @@ open_positions_iOList = io_list.copy()
 open_positions_iOList = open_positions_iOList.iloc[0:0]
 
 # Prints current time in NY to confirm that there are no bugs conc. timezones considered
-print("\n", datetime.datetime.now().astimezone(pytz.timezone(timezone)))
+print("\n", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)))
 
 # Prints io_list for reference and double-check
 print("\n", io_list.iloc[:, [0, 6, 7, 8, 10, 11]])
@@ -372,12 +372,12 @@ class TestApp(TestWrapper, TestClient):
             print("Order Status - Order ID:", orderId, "Status:", status, "Filled:", decimalMaxString(filled),
                   "Remaining:", decimalMaxString(remaining), "AvgFillPrice:", floatMaxString(avgFillPrice),
                   "Parent ID:", parentId,
-                  "(", datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
+                  "(", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
 
             last_orderStatus_message = current_message.copy()
 
         io_list = MyUtilities.update_io_list_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
-                                                                    io_list, timezone)
+                                                                    io_list, TIMEZONE)
 
     @printWhenExecuting
     def accountOperations_req(self):
@@ -438,12 +438,12 @@ class TestApp(TestWrapper, TestClient):
                 percent_invested = gross_position_value / portfolio_size
 
                 # Only updates if something has changed (beware the units)
-                if abs(percent_invested - percent_invested_last) * 100 > portfolio_update_prints:
+                if abs(percent_invested - percent_invested_last) * 100 > PORTFOLIO_UPDATE_PRINTS:
                     print("\nYour portfolio size is", round(portfolio_size, 0), "$. (",
-                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
+                          datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
 
                     print("You are now", round(percent_invested * 100, 2), "% invested. (",
-                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
+                          datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
 
                     percent_invested_last = percent_invested
 
@@ -455,9 +455,9 @@ class TestApp(TestWrapper, TestClient):
 
         if (key == "RealizedPnL" and currency == "BASE") or (key == "UnrealizedPnL" and currency == "BASE"):
             max_daily_loss_reached, realized_PnL_percent_last, unrealized_PnL_percent_last = (
-                MyUtilities.update_daily_pnl(portfolio_size, exr_rate, realized_PnL, realized_PnL_percent_last,
-                                             unrealized_PnL, unrealized_PnL_percent_last, max_allowed_daily_pnl_loss,
-                                             max_daily_loss_reached, timezone, portfolio_update_prints))
+                MyUtilities.update_daily_pnl(portfolio_size, EXR_RATE, realized_PnL, realized_PnL_percent_last,
+                                             unrealized_PnL, unrealized_PnL_percent_last, MAX_ALLOWED_DAILY_PNL_LOSS,
+                                             max_daily_loss_reached, TIMEZONE, PORTFOLIO_UPDATE_PRINTS))
 
     @iswrapper
     def accountDownloadEnd(self, accountName: str):
@@ -537,7 +537,7 @@ class TestApp(TestWrapper, TestClient):
         global fetch_stock_data_thread
         global open_positions_check_done
 
-        time_now = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+        time_now = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
         time_now_str = time_now.strftime("%H:%M:%S")
 
         if time_now > time_algo_starts + datetime.timedelta(minutes=1) and not open_positions_check_done:
@@ -553,12 +553,12 @@ class TestApp(TestWrapper, TestClient):
 
         if market_opening_hours_defined and \
                 (
-                        (market_close > time_now > market_opening and not market_has_pause)
+                        (market_close > time_now > market_opening and not MARKET_HAS_PAUSE)
                         or
                         (
                                 (market_pause_start > time_now > market_opening or
                                  market_close > time_now > market_pause_end)
-                                and market_has_pause
+                                and MARKET_HAS_PAUSE
                         )
                 ):
 
@@ -599,7 +599,7 @@ class TestApp(TestWrapper, TestClient):
         if not market_opening_hours_defined:
             return
 
-        if market_has_pause and time_now > market_opening:
+        if MARKET_HAS_PAUSE and time_now > market_opening:
             minutes_to_market_open = (market_pause_end - time_now).total_seconds() / 60
         else:
             minutes_to_market_open = (market_opening - time_now).total_seconds() / 60
@@ -629,7 +629,7 @@ class TestApp(TestWrapper, TestClient):
                 lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
                 aux_price = round(io_list['Stop price [$]'][reqId], 2)
                 oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                        timezone, ib_timezone_str, market_close, io_list)
+                                                        TIMEZONE, ib_timezone_str, market_close, io_list)
                 for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
@@ -727,7 +727,7 @@ class TestApp(TestWrapper, TestClient):
             update_DailyTradingPlan_timestamp = time_now
 
             try:
-                io_list_update = pd.read_excel(name_of_dailytradingplan, index_col=0)
+                io_list_update = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 
             except PermissionError:
                 print(
@@ -809,7 +809,7 @@ class TestApp(TestWrapper, TestClient):
                         lmt_price = round(io_list['Profit taker price [$]'][j], 2)
                         aux_price = round(io_list['Stop price [$]'][j], 2)
                         oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price,
-                                                                j, timezone, ib_timezone_str, market_close, io_list)
+                                                                j, TIMEZONE, ib_timezone_str, market_close, io_list)
                         for o in oca:
                             self.placeOrder(o.orderId, contract, o)
                             self.nextOrderId()
@@ -898,24 +898,24 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
 
             # Checks if I would reach my daily investment limit with this buy order
-            if io_list['Entry price [$]'][reqId] / exr_rate * io_list['Quantity [#]'][reqId] \
+            if io_list['Entry price [$]'][reqId] / EXR_RATE * io_list['Quantity [#]'][reqId] \
                     / portfolio_size + percent_invested > percent_invested_max:
 
                 # Reduces the size of the position to stay within the investment limit
                 io_list.loc[reqId, 'Quantity [#]'] = math.floor(
                     (percent_invested_max - percent_invested) * portfolio_size
-                    / (io_list['Entry price [$]'][reqId] / exr_rate))
+                    / (io_list['Entry price [$]'][reqId] / EXR_RATE))
 
                 io_list.loc[reqId, 'Invest limit reached'] = True
                 io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
 
                 # Very small resulting positions shall not be traded
                 if io_list['Quantity [#]'][reqId] * io_list['Entry price [$]'][reqId] \
-                        < min_position_size * portfolio_size:
+                        < MIN_POSITION_SIZE * portfolio_size:
                     io_list.loc[reqId, 'Position below limit'] = True
                     print(
                         f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily investment limit - "
-                        f"remainder is below the minimum position size of {round(min_position_size * 100, 1)}"
+                        f"remainder is below the minimum position size of {round(MIN_POSITION_SIZE * 100, 1)}"
                         f"% - trade not executed. ( {time_now_str} )")
                     return
 
@@ -927,7 +927,7 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Max. daily loss reached'] = True
                 io_list.loc[reqId, 'Max. daily loss reached [time]'] = time_now_str
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} not executed - daily max. loss of "
-                      f"{round(max_allowed_daily_pnl_loss * 100, 1)}% is reached. ( {time_now_str} ")
+                      f"{round(MAX_ALLOWED_DAILY_PNL_LOSS * 100, 1)}% is reached. ( {time_now_str} ")
                 return
 
             stock_spread = abs((io_list['ASK price [$]'][reqId] - io_list['BID price [$]'][reqId])
@@ -947,7 +947,7 @@ class TestApp(TestWrapper, TestClient):
                           f"stock loops within first minutes. ( {time_now_str} )")
                     io_list.loc[reqId, 'Stock looped'] = True
 
-                if stock_spread > max_stock_spread:
+                if stock_spread > MAX_STOCK_SPREAD:
                     print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} - Spread is above limit at:"
                           f"{round(stock_spread * 100, 2)}% - stock loops within first minutes. ( {time_now_str} )")
                     io_list.loc[reqId, 'Stock looped'] = True
@@ -958,7 +958,7 @@ class TestApp(TestWrapper, TestClient):
                     print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} - LAST price is above buy limit."
                           f"( {time_now_str} )")
 
-                if stock_spread > max_stock_spread:
+                if stock_spread > MAX_STOCK_SPREAD:
                     print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} - Spread is above limit at: "
                           f"{round(stock_spread * 100, 2)}%. ( {time_now_str} )")
 
@@ -966,14 +966,14 @@ class TestApp(TestWrapper, TestClient):
             if io_list['LAST price [$]'][reqId] >= io_list['Buy limit price [$]'][reqId]:
                 io_list.loc[reqId, 'Price above limit'] = True
 
-            if stock_spread > max_stock_spread:
+            if stock_spread > MAX_STOCK_SPREAD:
                 io_list.loc[reqId, 'Spread above limit'] = True
 
             # Checks 1) if stop has not already been undercut, 2) if stock price is still below the buy limit price,
-            # 3) spread < max_stock_spread
+            # 3) spread < MAX_STOCK_SPREAD
             if not io_list['Stop undercut'][reqId] and \
                     io_list['LAST price [$]'][reqId] < io_list['Buy limit price [$]'][reqId] and \
-                    stock_spread < max_stock_spread:
+                    stock_spread < MAX_STOCK_SPREAD:
 
                 io_list.loc[reqId, 'Order executed'] = True
                 io_list.loc[reqId, 'Order executed [time]'] = time_now.strftime("%y%m%d %H:%M:%S")
@@ -1003,10 +1003,10 @@ class TestApp(TestWrapper, TestClient):
                             f"-1% stop of {io_list['Stop price [$]'][reqId]} is used instead. ( {time_now_str} )")
 
                     MyUtilities.dailytradingplan_stop_update(reqId, io_list['Stop price [$]'][reqId],
-                                                             name_of_dailytradingplan)
+                                                             NAME_OF_DAILYTRADINGPLAN)
 
                 contract = MyUtilities.get_contract_details(io_list, reqId)
-                bracket, io_list = MyOrders.bracket_order(self.nextOrderId(), reqId, timezone, ib_timezone_str,
+                bracket, io_list = MyOrders.bracket_order(self.nextOrderId(), reqId, TIMEZONE, ib_timezone_str,
                                                           market_close, io_list)
                 for o in bracket:
                     self.placeOrder(o.orderId, contract, o)
@@ -1040,7 +1040,7 @@ class TestApp(TestWrapper, TestClient):
                     lmt_price = round(io_list['Profit taker price [$]'][i], 2)
                     aux_price = round(io_list['Stop price [$]'][reqId], 2)
                     oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, i,
-                                                            timezone, ib_timezone_str, market_close, io_list)
+                                                            TIMEZONE, ib_timezone_str, market_close, io_list)
                     for o in oca:
                         self.placeOrder(o.orderId, contract, o)
                         self.nextOrderId()
@@ -1049,21 +1049,21 @@ class TestApp(TestWrapper, TestClient):
                     io_list.loc[i, 'Stop price [$]'] = aux_price
 
                     # Changes stop price in DailyTradingPlan
-                    MyUtilities.dailytradingplan_stop_update(i, aux_price, name_of_dailytradingplan)
+                    MyUtilities.dailytradingplan_stop_update(i, aux_price, NAME_OF_DAILYTRADINGPLAN)
 
                     print(f"\nStock ID: {i} {io_list['Symbol'][i]} - Add and reduce executed. ( {time_now_str} )")
 
             io_list.loc[reqId, 'Add and reduce executed'] = True
 
         # Sells half of positions if stock is increasing X% over buy point and coming back in to b/e
-        # First, marker to be set if buy price increases X% after buy (see sell_half_reversal_rule)
+        # First, marker to be set if buy price increases X% after buy (see SELL_HALF_REVERSAL_RULE)
         if not io_list['Open position'][reqId] and io_list['Order filled'][reqId] and \
                 not io_list['2% above buy point'][reqId] and \
                 io_list['LAST price [$]'][reqId] > io_list['Entry price [$]'][reqId] * (
-                1 + sell_half_reversal_rule):
+                1 + SELL_HALF_REVERSAL_RULE):
 
             execution_timestamp = datetime.datetime.strptime(io_list['Order executed [time]'][reqId], "%y%m%d %H:%M:%S")
-            tz = pytz.timezone(timezone)
+            tz = pytz.timezone(TIMEZONE)
             execution_timestamp = tz.normalize(tz.localize(execution_timestamp))
 
             # Sets marker only if stock buy order was placed more than 2.5 minutes ago
@@ -1089,7 +1089,7 @@ class TestApp(TestWrapper, TestClient):
             self.placeOrder(order.orderId, contract, order)
 
             print(
-                f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} increased {round(sell_half_reversal_rule * 100, 1)}% "
+                f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} increased {round(SELL_HALF_REVERSAL_RULE * 100, 1)}% "
                 f"above buy price and came in to B/O level - sold half. ( {time_now_str} )")
 
             # Place new OCA profit taker and stop loss for 50% quantity
@@ -1097,7 +1097,7 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
             aux_price = round(io_list['Stop price [$]'][reqId], 2)
             oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                    timezone, ib_timezone_str, market_close, io_list)
+                                                    TIMEZONE, ib_timezone_str, market_close, io_list)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
@@ -1106,14 +1106,14 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Quantity [#]'] = total_quantity
 
         # Function increases stop to b/e if stock gained Y% over buy point
-        # Marker to be set if buy price increases Y% after buy (see sell_full_reversal_rule)
+        # Marker to be set if buy price increases Y% after buy (see SELL_FULL_REVERSAL_RULE)
         if not io_list['Open position'][reqId] and io_list['Order filled'][reqId] and \
                 not io_list['Stock sold'][reqId] and not io_list['5% above buy point'][reqId] and \
                 io_list['LAST price [$]'][reqId] > io_list['Entry price [$]'][reqId] * (
-                1 + sell_full_reversal_rule):
+                1 + SELL_FULL_REVERSAL_RULE):
 
             execution_timestamp = datetime.datetime.strptime(io_list['Order executed [time]'][reqId], "%y%m%d %H:%M:%S")
-            tz = pytz.timezone(timezone)
+            tz = pytz.timezone(TIMEZONE)
             execution_timestamp = tz.normalize(tz.localize(execution_timestamp))
 
             # Exits if order was place less than 2.5 minutes ago
@@ -1132,17 +1132,17 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
             aux_price = round(io_list['Entry price [$]'][reqId], 2)
             oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                    timezone, ib_timezone_str, market_close, io_list)
+                                                    TIMEZONE, ib_timezone_str, market_close, io_list)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
             io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId]
 
             # Changes stop price in DailyTradingPlan
-            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, name_of_dailytradingplan)
+            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, NAME_OF_DAILYTRADINGPLAN)
 
             print("\nStock ID:", reqId, io_list['Symbol'][reqId],
-                  "increased", round(sell_full_reversal_rule * 100, 1),
+                  "increased", round(SELL_FULL_REVERSAL_RULE * 100, 1),
                   "% above buy price - stop is increased to B/E. (",
                   time_now_str, ")")
 
@@ -1172,7 +1172,7 @@ class TestApp(TestWrapper, TestClient):
             lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
             aux_price = round(io_list['Stop price [$]'][reqId], 2)
             oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                    timezone, ib_timezone_str, market_close, io_list)
+                                                    TIMEZONE, ib_timezone_str, market_close, io_list)
             for o in oca:
                 self.placeOrder(o.orderId, contract, o)
                 self.nextOrderId()
@@ -1196,7 +1196,7 @@ class TestApp(TestWrapper, TestClient):
                     not io_list['Bad close rule'][reqId] and round(io_list['Quantity [#]'][reqId], 0) > 1 and \
                     (
                             (io_list['LAST price [$]'][reqId] - io_list['LOW price [$]'][reqId]) /
-                            (io_list['HIGH price [$]'][reqId] - io_list['LOW price [$]'][reqId]) < bad_close_rule
+                            (io_list['HIGH price [$]'][reqId] - io_list['LOW price [$]'][reqId]) < BAD_CLOSE_RULE
                     ):
 
                 # Cancels current bracket oder
@@ -1215,7 +1215,7 @@ class TestApp(TestWrapper, TestClient):
                 lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
                 aux_price = round(io_list['Stop price [$]'][reqId], 2)
                 oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
-                                                        timezone, ib_timezone_str, market_close, io_list)
+                                                        TIMEZONE, ib_timezone_str, market_close, io_list)
                 for o in oca:
                     self.placeOrder(o.orderId, contract, o)
                     self.nextOrderId()
@@ -1257,7 +1257,7 @@ class TestApp(TestWrapper, TestClient):
 
         super().contractDetails(reqId, contractDetails)
         # printinstance(contractDetails)
-        time_delta_to_initialized_market = datetime.datetime.now().astimezone(pytz.timezone(timezone)) - market_opening
+        time_delta_to_initialized_market = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - market_opening
 
         # saves longName in io_list and prints it for checking
         io_list.loc[reqId, 'Company name'] = contractDetails.longName
@@ -1278,9 +1278,9 @@ class TestApp(TestWrapper, TestClient):
         if MyUtilities.should_start_market_opening_function(io_list, time_delta_to_initialized_market):
 
             ib_timezone_str = contractDetails.timeZoneId
-            print(f"\nIB's timezone is {ib_timezone_str}.")
+            print(f"\nIB's TIMEZONE is {ib_timezone_str}.")
             market_trading_hours = contractDetails.liquidHours
-            tz = pytz.timezone(timezone)
+            tz = pytz.timezone(TIMEZONE)
             tradinghours_split_to_list = re.split(";|-", market_trading_hours)
             print("\n", tradinghours_split_to_list)
             index_open = int(input("\nEnter the index of the next market OPEN: "))
@@ -1290,7 +1290,7 @@ class TestApp(TestWrapper, TestClient):
             market_close = datetime.datetime.strptime(tradinghours_split_to_list[index_close], "%Y%m%d:%H%M")
             market_close = tz.normalize(tz.localize(market_close))
 
-            if market_has_pause:
+            if MARKET_HAS_PAUSE:
                 market_pause_start = datetime.datetime.strptime(tradinghours_split_to_list[index_open + 1],
                                                                 "%Y%m%d:%H%M")
                 market_pause_start = tz.normalize(tz.localize(market_pause_start))
@@ -1311,7 +1311,7 @@ class TestApp(TestWrapper, TestClient):
             else:
                 print("Earnings dates can only be given for US-stocks.")
 
-            if datetime.datetime.now().astimezone(pytz.timezone(timezone)) > market_close:
+            if datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) > market_close:
                 input("\n ### Attention ### Market close is already in the past. Code will exit.")
                 exit()
 
@@ -1377,7 +1377,7 @@ class TestApp(TestWrapper, TestClient):
         global tick_data_open_position
         global tick_data_new_row
 
-        time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+        time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
 
         print("\nFetch stock data function is started.\n")
         # Writes the tick_data for each ticker to pd dataframe every second for later analysis
@@ -1387,24 +1387,24 @@ class TestApp(TestWrapper, TestClient):
             # Appends fetch data to relevant files
             tick_data, tick_data_open_position = MyUtilities.append_fetch_data(tick_data, tick_data_open_position,
                                                                                tick_data_new_row,
-                                                                               io_list_copy_for_tick_data, timezone)
+                                                                               io_list_copy_for_tick_data, TIMEZONE)
 
             # Pauses while-loop for one second until the next round
             time.sleep(1)
 
-            time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(timezone))
+            time_now_fetch = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
 
-        filename = market_close.strftime("%y%m%d") + name_of_dailytradingplan_save
+        filename = market_close.strftime("%y%m%d") + NAME_OF_DAILYTRADINGPLAN_SAVE
         MyUtilities.save_excel_outputs(filename, io_list)
 
         # Avoids saving an Excel file if no new positions are in DailyTradingPlan
         if len(tick_data) > 100:
-            filename = market_close.strftime("%y%m%d") + name_of_fetchdata_new_save
+            filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_NEW_SAVE
             MyUtilities.save_excel_outputs(filename, tick_data)
 
         # Avoids saving an Excel file if no open positions are in DailyTradingPlan
         if len(tick_data_open_position) > 100:
-            filename = market_close.strftime("%y%m%d") + name_of_fetchdata_open_save
+            filename = market_close.strftime("%y%m%d") + NAME_OF_FETCHDATA_OPEN_SAVE
             MyUtilities.save_excel_outputs(filename, tick_data_open_position)
 
         # Return to close the thread, since daemon=False. "sys.exit()" is an alternative.
@@ -1412,15 +1412,15 @@ class TestApp(TestWrapper, TestClient):
 
 
 def main():
-    global client_id
+    global CLIENT_ID
 
     SetupLogger()
     logging.debug("now is %s", datetime.datetime.now())
     logging.getLogger().setLevel(logging.ERROR)
 
     cmdLineParser = argparse.ArgumentParser("api tests")
-    cmdLineParser.add_argument("-p", "--port", action="store", type=int,
-                               dest="port", default=port, help="The TCP port to use")
+    cmdLineParser.add_argument("-p", "--PORT", action="store", type=int,
+                               dest="PORT", default=PORT, help="The TCP PORT to use")
     cmdLineParser.add_argument("-C", "--global-cancel", action="store_true",
                                dest="global_cancel", default=False,
                                help="whether to trigger a globalCancel req")
@@ -1445,7 +1445,7 @@ def main():
         app = TestApp()
         if args.global_cancel:
             app.globalCancelOnly = True
-        app.connect("127.0.0.1", args.port, clientId=client_id)
+        app.connect("127.0.0.1", args.port, clientId=CLIENT_ID)
         print("serverVersion:%s connectionTime:%s" % (app.serverVersion(),
                                                       app.twsConnectionTime()))
 
