@@ -36,6 +36,8 @@ from ibapi.tag_value import TagValue
 from Utilities.MyUtilities import MyUtilities
 from Utilities.MyOrders import MyOrders
 from Rules.ConstantsAndRules import market_constants
+from Functionalities.MyFunctionalities import OrderExecutionNewPositions, BracketOrdersOpenPositions,SellHalfRule,\
+    SellSquatRule, BadCloseRule, AddAndReduce, SellOnClose, SellBelowSMA, DailyInvestmentLimit
 
 from Rules.ConstantsAndRules import (PORT, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE, SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE,
                                      MAX_ALLOWED_DAILY_PNL_LOSS, MIN_POSITION_SIZE, PORTFOLIO_UPDATE_PRINTS)
@@ -62,8 +64,8 @@ market_close = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - dat
 market_pause_start = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
 market_pause_end = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)) - datetime.timedelta(days=31)
 ib_timezone_str = ""
-markets_are_open = False
-previous_markets_are_open = False
+is_market_open = False
+previous_is_market_open = False
 all_opening_hours = []
 market_open_print_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
 update_DailyTradingPlan_timestamp = datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE))
@@ -88,8 +90,9 @@ fetch_stock_data_thread = None
 open_positions_check_done = False
 last_orderStatus_message = {}
 
-io_list = pd.read_excel('./Inputs/' + NAME_OF_DAILYTRADINGPLAN, index_col=0)
-tick_data = pd.read_excel('./Inputs/' + 'tickDataTemplate.xlsx', index_col=0)
+# Read Excel files using read_excel_inputs()
+io_list = MyUtilities.read_excel_inputs(NAME_OF_DAILYTRADINGPLAN, index_col=0)
+tick_data = MyUtilities.read_excel_inputs('tickDataTemplate.xlsx', index_col=0)
 
 io_list, tick_data = MyUtilities.clean_up_data_frame(io_list, tick_data, return_both_dataframes=True)
 
@@ -368,7 +371,7 @@ class TestApp(TestWrapper, TestClient):
             "ParentId": parentId,
         }
 
-        if markets_are_open and current_message != last_orderStatus_message:
+        if is_market_open and current_message != last_orderStatus_message:
             print("Order Status - Order ID:", orderId, "Status:", status, "Filled:", decimalMaxString(filled),
                   "Remaining:", decimalMaxString(remaining), "AvgFillPrice:", floatMaxString(avgFillPrice),
                   "Parent ID:", parentId,
@@ -529,8 +532,8 @@ class TestApp(TestWrapper, TestClient):
         global io_list_copy_for_tick_data
         global all_orders_cancelled
         global daily_brackets_submitted
-        global markets_are_open
-        global previous_markets_are_open
+        global is_market_open
+        global previous_is_market_open
         global market_opening_hours_defined
         global market_open_print_timestamp
         global update_DailyTradingPlan_timestamp
@@ -562,12 +565,12 @@ class TestApp(TestWrapper, TestClient):
                         )
                 ):
 
-            markets_are_open = True
+            is_market_open = True
         else:
-            markets_are_open = False
+            is_market_open = False
 
         # Triggers only once when markets just opened
-        if market_opening_hours_defined and markets_are_open and not previous_markets_are_open:
+        if market_opening_hours_defined and is_market_open and not previous_is_market_open:
             update_DailyTradingPlan_timestamp = time_now
             print("\n##################################################################")
             print("\nDingDingDing - Markets are open!\n")
@@ -577,20 +580,20 @@ class TestApp(TestWrapper, TestClient):
             io_list[columns_to_clear] = np.nan
 
         # Triggers only once when markets just closed
-        if previous_markets_are_open and not markets_are_open:
+        if previous_is_market_open and not is_market_open:
             print("\n##################################################################")
             print("\nMarkets are closed.\n")
             print("##################################################################\n")
 
         # Update the previous state for the next check
-        previous_markets_are_open = markets_are_open
+        previous_is_market_open = is_market_open
 
         # Allocates all relevant tickTypes to their respective field
         io_list, io_list_copy_for_tick_data = MyUtilities.feed_price_io_lists(io_list, io_list_copy_for_tick_data,
                                                                         TickTypeEnum.toStr(tickType), reqId, price)
 
         # Start function fetch_stock_data() only oncetick_type
-        if not fetch_data_triggered and markets_are_open:
+        if not fetch_data_triggered and is_market_open:
             fetch_stock_data_thread = threading.Thread(target=self.fetch_stock_data, daemon=False)
             fetch_stock_data_thread.start()
             fetch_data_triggered = True
@@ -622,7 +625,7 @@ class TestApp(TestWrapper, TestClient):
                 return
 
             # Bracket shall immediately be placed when last price is within -1% or above of defined stop
-            if markets_are_open and io_list['LAST price [$]'][reqId] > io_list['Stop price [$]'][reqId] * 0.99:
+            if is_market_open and io_list['LAST price [$]'][reqId] > io_list['Stop price [$]'][reqId] * 0.99:
                 # Place new OCA profit taker and stop loss
                 contract = MyUtilities.get_contract_details(io_list, reqId)
                 total_quantity = round(io_list['Quantity [#]'][reqId], 0)
@@ -640,7 +643,7 @@ class TestApp(TestWrapper, TestClient):
                       f"( {time_now_str} )")
 
             # If price gaps below -1% from buy price and stock iterates the first time:
-            elif markets_are_open and io_list["Stop timestamp"][reqId] == "":
+            elif is_market_open and io_list["Stop timestamp"][reqId] == "":
                 io_list.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
                 io_list.loc[reqId, "Last stop price"] = io_list["LAST price [$]"][reqId]
                 io_list.loc[reqId, 'Stock looped'] = True
@@ -648,7 +651,7 @@ class TestApp(TestWrapper, TestClient):
                       f"( {time_now_str} )")
 
             # If price gaps below -1% from buy price and stock iterates further:
-            elif markets_are_open and io_list["Stop timestamp"][reqId] <= \
+            elif is_market_open and io_list["Stop timestamp"][reqId] <= \
                     datetime.datetime.now(tz=None) - datetime.timedelta(seconds=4):
 
                 # If stock continues to sink within last 4 seconds, sell order is placed
@@ -680,7 +683,7 @@ class TestApp(TestWrapper, TestClient):
                 print(f"\nAll brackets for open positions transmitted. ( {time_now_str} )\n")
 
         # Only continues if market_hours are defined and markets are open (reports every minute)
-        if not markets_are_open and time_now < market_close + datetime.timedelta(minutes=3):
+        if not is_market_open and time_now < market_close + datetime.timedelta(minutes=3):
 
             # Prints message more often the closer it gets to market opening
             if (
@@ -720,14 +723,14 @@ class TestApp(TestWrapper, TestClient):
 
         # Updating DailyTradingPlan
         # Function reads DailyTradingPlan every few seconds and checks for updates (open and new positions)
-        if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=15) < time_now:
+        if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=10) < time_now:
 
             success_reading_xls = True
             io_list_update = None
             update_DailyTradingPlan_timestamp = time_now
 
             try:
-                io_list_update = pd.read_excel('./Inputs/' + NAME_OF_DAILYTRADINGPLAN, index_col=0)
+                io_list_update = MyUtilities.read_excel_inputs(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 
             except PermissionError:
                 print(

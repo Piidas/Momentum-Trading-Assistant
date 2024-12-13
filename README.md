@@ -80,7 +80,7 @@ Define which market you want to trade, see Figure below. Since MTA can only trad
 
 Afterwards, an extract of your `DailyTradingPlan.xlsx` will be printed and you will be asked to confirm that the `DailyTradingPlan.xlsx` is correct with “y” in case, see Figure below.
 
-![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2)
+![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2) 
 
 Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be `0 < x < ∞` and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf).
 
@@ -132,7 +132,8 @@ It must be assured that MTA is running and has a continuous internet connection 
 
 Your feedback as well as contribution is most welcome. This project shall serve to support our trading and improve our trading results.
 Proposed next improvements are:
-  - Increase focus on OOP standards
+  - 
+  - Increase focus on OOP standards (to be pursued soon in separate fork)
   - etc.
 
 Therefore, brains-on please :)
