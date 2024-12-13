@@ -306,6 +306,38 @@ class MyUtilities:
         return max_daily_loss_reached, realized_pnl_percent_last, unrealized_pnl_percent_last
 
     @staticmethod
+    def read_excel_inputs(filename, index_col=None):
+
+        try:
+            # Get the path to the current script (MyUtilities.py)
+            script_path = Path(__file__).resolve()
+
+            # Define the Inputs directory relative to the script's parent directory
+            inputs_dir = script_path.parent.parent / 'Inputs'
+
+            # Check if Inputs directory exists
+            if not inputs_dir.exists():
+                raise FileNotFoundError(f"Inputs directory does not exist: {inputs_dir}")
+
+            # Define the full path for the Excel file
+            file_path = inputs_dir / filename
+
+            # Check if the file exists
+            if not file_path.exists():
+                raise FileNotFoundError(f"Excel file not found: {file_path}")
+
+            # Read the Excel file
+            df = pd.read_excel(file_path, index_col=index_col)
+
+            print(f"Successfully read Excel file: {file_path}")
+            return df
+
+        except Exception as e:
+            print(f"Failed to read Excel file: {e}")
+            return None
+
+
+    @staticmethod
     def save_excel_outputs(filename, pd_dataframe):
 
         try:
