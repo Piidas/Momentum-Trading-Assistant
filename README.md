@@ -47,11 +47,11 @@ It is recommended but not necessary to start MTA before the market opens.
 As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires six files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
 
   - [`main.py`](/main.py)
-  - [`MyOrders.py`](/MyOrders.py)
-  - [`MyUtilities.py`](/MyUtilities.py)
-  - [`ConstantsAndRules.py`](/ConstantsAndRules.py)
-  - [`tickDataTemplate.xlsx`](/tickDataTemplate.xlsx)
-  - [`DailyTradingPlan.xlsx`](/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
+  - [`MyOrders.py`](/Utilities/MyOrders.py)
+  - [`MyUtilities.py`](/Utilities/MyUtilities.py)
+  - [`ConstantsAndRules.py`](/Rules/ConstantsAndRules.py)
+  - [`tickDataTemplate.xlsx`](/Inputs/tickDataTemplate.xlsx)
+  - [`DailyTradingPlan.xlsx`](/Inputs/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
 
 The program will return the following three files as output:
 
@@ -125,7 +125,12 @@ It must be assured that MTA is running and has a continuous internet connection 
 
 # Contribution to this project
 
-Your feedback as well as contribution is most welcome. This project shall serve to support our trading and improve our trading results. Therefore, brains-on please 
+Your feedback as well as contribution is most welcome. This project shall serve to support our trading and improve our trading results.
+Proposed next improvements are:
+  - Increase focus on OOP standards
+  - etc.
+
+Therefore, brains-on please :)
 
 # Software support
 

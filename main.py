@@ -33,12 +33,12 @@ from ibapi.commission_report import CommissionReport
 from ibapi.ticktype import *
 from ibapi.tag_value import TagValue
 
-from MyUtilities import MyUtilities
-from MyOrders import MyOrders
-from ConstantsAndRules import market_constants
+from Utilities.MyUtilities import MyUtilities
+from Utilities.MyOrders import MyOrders
+from Rules.ConstantsAndRules import market_constants
 
-from ConstantsAndRules import (PORT, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE, SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE,
-                               MAX_ALLOWED_DAILY_PNL_LOSS, MIN_POSITION_SIZE, PORTFOLIO_UPDATE_PRINTS)
+from Rules.ConstantsAndRules import (PORT, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE, SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE,
+                                     MAX_ALLOWED_DAILY_PNL_LOSS, MIN_POSITION_SIZE, PORTFOLIO_UPDATE_PRINTS)
 
 which_markets_to_trade = input("\nDo you want to trade New York [NY], Japan [JP] or Germany [DE]?\n")
 config = market_constants.get(which_markets_to_trade)
@@ -88,8 +88,8 @@ fetch_stock_data_thread = None
 open_positions_check_done = False
 last_orderStatus_message = {}
 
-io_list = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
-tick_data = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
+io_list = pd.read_excel('./Inputs/' + NAME_OF_DAILYTRADINGPLAN, index_col=0)
+tick_data = pd.read_excel('./Inputs/' + 'tickDataTemplate.xlsx', index_col=0)
 
 io_list, tick_data = MyUtilities.clean_up_data_frame(io_list, tick_data, return_both_dataframes=True)
 
@@ -727,7 +727,7 @@ class TestApp(TestWrapper, TestClient):
             update_DailyTradingPlan_timestamp = time_now
 
             try:
-                io_list_update = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
+                io_list_update = pd.read_excel('./Inputs/' + NAME_OF_DAILYTRADINGPLAN, index_col=0)
 
             except PermissionError:
                 print(
