@@ -28,9 +28,9 @@ This section contains all necessary steps you need to get MTA up and running:
 
   3) Subscribe to the relevant market data on you IB-account
 
-  4) Save `main.py`, `MyOrders.py`, `MyUtilities.py`, `ConstantsAndRules.py`, `tickDataTemplate.xlsx` and `DailyTradingPlan.xlsx` in one folder of your choice
+  4) Save this project to a folder of your choice
 
-  5) Fill columns A, B and D to M of `DailyTradingPlan.xlsx`
+  5) Go to the `Inputs` folder and fill columns A, B and D to M of `DailyTradingPlan.xlsx`
 
   6) Log into TWS
 
@@ -47,13 +47,18 @@ It is recommended but not necessary to start MTA before the market opens.
 As detailed further in the [User Manual](/User-Manual_Momentum-Trading-Assistant.pdf), MTA requires six files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
 
   - [`main.py`](/main.py)
-  - [`MyOrders.py`](/Utilities/MyOrders.py)
-  - [`MyUtilities.py`](/Utilities/MyUtilities.py)
-  - [`ConstantsAndRules.py`](/Rules/ConstantsAndRules.py)
-  - [`tickDataTemplate.xlsx`](/Inputs/tickDataTemplate.xlsx)
-  - [`DailyTradingPlan.xlsx`](/Inputs/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
+  - [`Functionalities`](/Functionalities)
+    - [`MyFunctionalities.py`](/Functionalities/MyFunctionalities.py)
+  - [`Utilities/`](/Utilities)
+    - [`MyOrders.py`](/Utilities/MyOrders.py)
+    - [`MyUtilities.py`](/Utilities/MyUtilities.py)
+  - [`Rules/`](/Rules)
+    - [`ConstantsAndRules.py`](/Rules/ConstantsAndRules.py)
+  - [`Inputs/`](/Inputs)
+    - [`tickDataTemplate.xlsx`](/Inputs/tickDataTemplate.xlsx)
+    - [`DailyTradingPlan.xlsx`](/Inputs/DailyTradingPlan.xlsx) (resp. `DailyTradingPlan_DE.xlsx` or `DailyTradingPlan_JP.xlsx`)
 
-The program will return the following three files as output:
+The program will return the following three files to the `Outputs` folder:
 
   - `yymmdd_fetch_open_positions.xlsx`
   - `yymmdd_fetch_new_positions.xlsx`
