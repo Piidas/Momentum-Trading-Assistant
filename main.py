@@ -91,7 +91,7 @@ last_orderStatus_message = {}
 io_list = pd.read_excel(NAME_OF_DAILYTRADINGPLAN, index_col=0)
 tick_data = pd.read_excel('tickDataTemplate.xlsx', index_col=0)
 
-io_list, tick_data = MyUtilities.data_frame_clean_up(io_list, tick_data, return_both_dataframes=True)
+io_list, tick_data = MyUtilities.clean_up_data_frame(io_list, tick_data, return_both_dataframes=True)
 
 io_list = MyUtilities.document_trading_parameters(io_list, MAX_STOCK_SPREAD, SELL_HALF_REVERSAL_RULE,
                                                   SELL_FULL_REVERSAL_RULE, BAD_CLOSE_RULE, MAX_ALLOWED_DAILY_PNL_LOSS,
@@ -744,7 +744,7 @@ class TestApp(TestWrapper, TestClient):
 
             if success_reading_xls:
                 # Applies the necessary datatypes again
-                io_list_update = MyUtilities.data_frame_clean_up(io_list_update, tick_data, return_both_dataframes=False)
+                io_list_update = MyUtilities.clean_up_data_frame(io_list_update, tick_data, return_both_dataframes=False)
 
                 for j in range(len(io_list_update)):
 

@@ -74,7 +74,7 @@ class MyUtilities:
     # This function gives all columns the proper dtype
     # Can return one or two dataframes through return_both_dataframes
     @staticmethod
-    def data_frame_clean_up(io_list_clean, tick_data_clean, return_both_dataframes=False):
+    def clean_up_data_frame(io_list_clean, tick_data_clean, return_both_dataframes=False):
 
         # Define a list of column names to apply the lambda operation to
         bool_columns_to_convert = ['Open position', 'Add and reduce', 'Sell on close', 'Stop low of day',
