@@ -2,7 +2,7 @@
 
 Momentum-Trading-Assistant (MTA) is a python program designed to replace a Momentum Trader using the Interactive Brokers Trader Workstation (TWS) in front of the screen during market opening hours, respectively to assist him during trading hours through order executions and the application of further individualized trading rules. Herein, MTA makes use of the API as provided by Interactive Brokers. This program is especially designed for Momentum Traders following the trading style of Mark Minervini, William O’Neal, Mark Richie II, Oliver Kell, Quallamaggie and many more.
 
-This code offers a way to hard-wire your trading rules, execute them consequently and adjust these rules periodically after your personal post analysis. Momentum trading is directional trading and means that the entry prices defined in your daily trading plan must be above the current price, see more on order execution in the [User Manual](/User-Manual Momentum-Trading-Assistant.pdf). Your trading strategy needs to be defined daily in the DailyTradingPlan.xlsx file. The code is currently written for trading stocks long only and has not been tested on other assets.
+This code offers a way to hard-wire your trading rules, execute them consequently and adjust these rules periodically after your personal post analysis. Momentum trading is directional trading and means that the entry prices defined in your daily trading plan must be above the current price, see more on order execution in the [User Manual](/User-Manual-Momentum-Trading-Assistant.pdf). Your trading strategy needs to be defined daily in the DailyTradingPlan.xlsx file. The code is currently written for trading stocks long only and has not been tested on other assets.
 
 MTA does not make any trading decisions which are not predefined by the user in advance. Therefore, the stock selection, definition of risk and profit potential, entry and exit scenarios fully rely on the Momentum Trader’s judgement and decisions. This trading plan can also be updated when MTA is running so that it can be used to assist you while live trading.
 
@@ -12,7 +12,7 @@ The program can be started e.g. through the cmd prompt after you have opened and
 
 MTA is meant not only for trading-enthusiasts among the IT community, but also momentum traders with only limited IT and esp. coding know-how. Please therefore excuse that some explanations in the README as well as the User Manual are somewhat nitty gritty.
 
-The README.md provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the more detailed [User Manual](/User-Manual Momentum-Trading-Assistant.pdf) as provided within this project.
+The README.md provides only a very first view on how to use MTA, but does not cover any further details about its many trading rules and functionalities. Therefore, please refer also to the more detailed [User Manual](/User-Manual-Momentum-Trading-Assistant.pdf) as provided within this project.
 
 # Liabilities
 
@@ -44,7 +44,7 @@ It is recommended but not necessary to start MTA before the market opens.
 
 # MTA input and output files
 
-As detailed further in the [User Manual](/User-Manual Momentum-Trading-Assistant.pdf), MTA requires six files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
+As detailed further in the [User Manual](/User-Manual-Momentum-Trading-Assistant.pdf), MTA requires six files as inputs for startup, which are located in the same folder and will return three files as outputs to this same folder. Only `DailyTradingPlan.xlsx`  contains your daily trading plan and needs to be updated daily. The input files are:
 
   - [`main.py`](/main.py)
   - [`Functionalities`](/Functionalities)
@@ -82,7 +82,7 @@ Afterwards, an extract of your `DailyTradingPlan.xlsx` will be printed and you w
 
 ![image](https://github.com/user-attachments/assets/19f69046-0b10-4c92-8550-698aefe654b2) 
 
-Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be `0 < x < ∞` and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual Momentum-Trading-Assistant.pdf).
+Then define what %-invested you would like to go as a maximum for the day, see Figure below. The entered value can be `0 < x < ∞` and therefore can also be used for a margin account. Please see further information on the significance of this value in the [User Manual](/User-Manual-Momentum-Trading-Assistant.pdf).
 
 ![image](https://github.com/user-attachments/assets/c4df87a1-9e76-447d-a6b2-5dda474f04d4)
 
@@ -140,5 +140,5 @@ Therefore, brains-on please :)
 
 # Software support
 
-If you encounter any errors or uncertainties resp. ambiguities towards MTA’s usage, please feel free to come back to me any time in case I did not cover this topic in the [User Manual](/User-Manual Momentum-Trading-Assistant.pdf).
+If you encounter any errors or uncertainties resp. ambiguities towards MTA’s usage, please feel free to come back to me any time in case I did not cover this topic in the [User Manual](/User-Manual-Momentum-Trading-Assistant.pdf).
 
