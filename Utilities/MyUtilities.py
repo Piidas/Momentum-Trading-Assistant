@@ -329,7 +329,6 @@ class MyUtilities:
             # Read the Excel file
             df = pd.read_excel(file_path, index_col=index_col)
 
-            print(f"Successfully read Excel file: {file_path}")
             return df
 
         except Exception as e:

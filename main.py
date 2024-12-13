@@ -1448,7 +1448,7 @@ def main():
         app = TestApp()
         if args.global_cancel:
             app.globalCancelOnly = True
-        app.connect("127.0.0.1", args.port, clientId=CLIENT_ID)
+        app.connect("127.0.0.1", PORT, clientId=CLIENT_ID)
         print("serverVersion:%s connectionTime:%s" % (app.serverVersion(),
                                                       app.twsConnectionTime()))
 
