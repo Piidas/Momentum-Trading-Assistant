@@ -132,7 +132,7 @@ It must be assured that MTA is running and has a continuous internet connection 
 
 Your feedback as well as contribution is most welcome. This project shall serve to support our trading and improve our trading results.
 Proposed next improvements are:
-  - 
+  - Slim down `main.py` through outsourcing of logical tests to `MyFunctionalities.py`
   - Increase focus on OOP standards (to be pursued soon in separate fork)
   - etc.
 
