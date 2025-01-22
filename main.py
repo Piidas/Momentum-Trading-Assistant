@@ -1069,7 +1069,7 @@ class TestApp(TestWrapper, TestClient):
             tz = pytz.timezone(TIMEZONE)
             execution_timestamp = tz.normalize(tz.localize(execution_timestamp))
             print(f"\nStock ID: {i} {io_list['Symbol'][i]} increased {SELL_HALF_REVERSAL_RULE * 100}%"
-                  f"above buy price. Sell-half-rule activated. ( {time_now_str} )")
+                  f"above buy price - Sell-half-rule activated. ( {time_now_str} )")
 
             # Sets marker only if stock buy order was placed more than 2.5 minutes ago
             if (time_now - execution_timestamp).seconds > 150:
