@@ -306,18 +306,52 @@ class MyUtilities:
         return max_daily_loss_reached, realized_pnl_percent_last, unrealized_pnl_percent_last
 
     @staticmethod
-    def read_excel_inputs(filename, index_col=None):
+    def get_directory_path(directory_name):
+        """
+        Returns the absolute path to the specified directory relative to the script's parent directory.
 
+        Parameters:
+        - directory_name (str): Name of the directory ('Inputs' or 'Outputs').
+
+        Returns:
+        - Path object representing the directory path.
+
+        Raises:
+        - FileNotFoundError: If the specified directory does not exist.
+        """
         try:
-            # Get the path to the current script (MyUtilities.py)
+            # Get the absolute path to the current script (MyUtilities.py)
             script_path = Path(__file__).resolve()
 
-            # Define the Inputs directory relative to the script's parent directory
-            inputs_dir = script_path.parent.parent / 'Inputs'
+            # Define the target directory relative to the script's parent directory
+            target_dir = script_path.parent.parent / directory_name
 
-            # Check if Inputs directory exists
-            if not inputs_dir.exists():
-                raise FileNotFoundError(f"Inputs directory does not exist: {inputs_dir}")
+            # Check if the target directory exists
+            if not target_dir.exists():
+                raise FileNotFoundError(f"{directory_name} directory does not exist: {target_dir}")
+
+            return target_dir
+
+        except Exception as e:
+            print(f"Error in get_directory_path: {e}")
+            raise
+
+    @staticmethod
+    def read_excel_inputs(filename, index_col=None):
+        """
+        Reads an Excel file from the Inputs directory into a pandas DataFrame.
+
+        Parameters:
+        - filename (str): Name of the Excel file to read.
+        - index_col (int or str, optional): Column to set as the index of the DataFrame.
+
+        Returns:
+        - pandas.DataFrame: DataFrame containing the Excel data.
+        - None: If reading the file fails.
+        """
+        try:
+            # Get the Inputs directory path
+            inputs_dir = MyUtilities.get_directory_path('Inputs')
 
             # Define the full path for the Excel file
             file_path = inputs_dir / filename
@@ -326,10 +360,14 @@ class MyUtilities:
             if not file_path.exists():
                 raise FileNotFoundError(f"Excel file not found: {file_path}")
 
-            # Read the Excel file
+            # Read the Excel file into a DataFrame
             df = pd.read_excel(file_path, index_col=index_col)
 
             return df
+
+        except Exception as e:
+            print(f"Failed to read Excel file '{filename}': {e}")
+            return None
 
         except Exception as e:
             print(f"Failed to read Excel file: {e}")
@@ -338,16 +376,19 @@ class MyUtilities:
 
     @staticmethod
     def save_excel_outputs(filename, pd_dataframe):
+        """
+        Saves a pandas DataFrame to an Excel file in the Outputs directory.
 
+        Parameters:
+        - filename (str): Name of the Excel file to save.
+        - pd_dataframe (pandas.DataFrame): DataFrame to save to Excel.
+
+        Returns:
+        - None
+        """
         try:
-            # Get the path to the current script
-            script_path = Path(__file__).resolve()
-
-            # Define the Outputs directory relative to the script's parent directory
-            outputs_dir = script_path.parent.parent / 'Outputs'
-
-            # Create the Outputs directory if it doesn't exist
-            outputs_dir.mkdir(parents=True, exist_ok=True)
+            # Get the Outputs directory path
+            outputs_dir = MyUtilities.get_directory_path('Outputs')
 
             # Define the full path for the Excel file
             file_path = outputs_dir / filename
@@ -359,39 +400,68 @@ class MyUtilities:
             print(f"\nExcel output saved to {file_path}\n")
 
         except Exception as e:
-            print(f"Failed to save Excel output: {e}")
+            print(f"Failed to save Excel output '{filename}': {e}")
 
     @staticmethod
     def dailytradingplan_stop_update(i, stop_loss_price, name_of_dailytradingplan):
+        """
+        Updates the stop loss price in the DailyTradingPlan Excel file.
 
-        # Attempt to update the DailyTradingPlan up to 3 times with a 20-second delay between tries
-        # if a PermissionError is encountered (e.g., file is open).
+        Parameters:
+        - i (int): The row index (0-based) to update.
+        - stop_loss_price (float): The new stop loss price to set.
+        - name_of_dailytradingplan (str): The filename of the DailyTradingPlan Excel file.
 
+        Returns:
+        - None
+        """
         max_attempts = 3
         attempt = 0
         success_writing_xls = False
 
         while attempt < max_attempts and not success_writing_xls:
             try:
-                workbook = load_workbook(filename=name_of_dailytradingplan)
+                # Get the Inputs directory path
+                inputs_dir = MyUtilities.get_directory_path('Inputs')
+
+                # Define the full path for the Excel file
+                file_path = inputs_dir / name_of_dailytradingplan
+
+                # Load the workbook
+                workbook = load_workbook(filename=file_path)
                 sheet = workbook.active
-                cell_name = "I" + str(i + 2)  # Adjusting index for Excel row.
+
+                # Determine the cell to update (e.g., "I3" if i=1)
+                cell_name = f"I{i + 2}"  # Adjusting index for Excel row (assuming headers are in row 1)
                 sheet[cell_name] = stop_loss_price
-                workbook.save(filename=name_of_dailytradingplan)
+
+                # Save the workbook
+                workbook.save(filename=file_path)
                 success_writing_xls = True  # Update was successful, exit the loop
                 print("DailyTradingPlan updated successfully.")
+
             except PermissionError as e:
                 attempt += 1  # Increase the attempt counter
                 time_now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                print(f"Attempt {attempt}: Did not get permission to write to DailyTradingPlan."
+                print(f"Attempt {attempt}: Did not get permission to write to {file_path}. "
                       f"Will try again in 20 secs. ({time_now_str})")
                 print(f"Error details: {e}")
                 if attempt < max_attempts:
                     time.sleep(20)  # Wait for 20 seconds before the next attempt
 
+            except FileNotFoundError as e:
+                # If the Inputs directory or Excel file is not found, log the error and exit
+                print(f"FileNotFoundError: {e}")
+                break
+
+            except Exception as e:
+                # Handle other exceptions
+                print(f"An unexpected error occurred while updating '{name_of_dailytradingplan}': {e}")
+                break
+
         if not success_writing_xls:
             # Final message if all attempts fail
-            print("Failed to update DailyTradingPlan after 3 attempts - stopp loss will change back to original value.")
+            print("Failed to update DailyTradingPlan after 3 attempts - stop loss will change back to original value.")
 
     @staticmethod
     def find_earnings_dates(io_list, market_opening):
