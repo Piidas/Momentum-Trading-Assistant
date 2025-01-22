@@ -219,7 +219,7 @@ class MyUtilities:
                                    status == "PendingCancel" or status == "Cancelled") and filled > 0):
 
             try:
-                index = io_list[io_list['parent_order_id'] == order_id].index.item()
+                index = io_list[io_list['parentOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Order filled'] = True
                 io_list.loc[index, 'Entry price [$]'] = last_fill_price
                 print("\nStock ID:", index, io_list['Symbol'][index], "buy order filled. (",

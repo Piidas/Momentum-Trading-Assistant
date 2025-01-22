@@ -75,7 +75,7 @@ class MyOrders:
             bracket_orders = [parent, profit_target_order, stop_loss_order]
 
         # Reporting
-        io_list.loc[req_id, 'parent_order_id'] = parent_order_id
+        io_list.loc[req_id, 'parentOrderId'] = parent_order_id
         io_list.loc[req_id, 'profitOrderId'] = parent_order_id + 1
         io_list.loc[req_id, 'stopOrderId'] = parent_order_id + 2
 
