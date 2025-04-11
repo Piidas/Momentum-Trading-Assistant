@@ -781,8 +781,21 @@ class TestApp(TestWrapper, TestClient):
                             )) and (
                             io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j] or
                             io_list_update['Profit taker price [$]'][j] != io_list['Profit taker price [$]'][j] or
-                            io_list_update['Quantity [#]'][j] < io_list['Quantity [#]'][j]
+                            io_list_update['Quantity [#]'][j] < io_list['Quantity [#]'][j] or
+                            io_list_update['Sell on close'][j] != io_list['Sell on close'][j] or
+                            io_list_update['Stop low of day'][j] != io_list['Stop low of day'][j] or
+                            (not (pd.isna(io_list_update['Sell bellow SMA [$]'][j]) and pd.isna(
+                                io_list['Sell bellow SMA [$]'][j])) and
+                             io_list_update['Sell bellow SMA [$]'][j] != io_list['Sell bellow SMA [$]'][j])
                     ):
+
+                        # Only required if "Stop low of day" is newly set
+                        if io_list_update['Stop low of day'][j] and not io_list['Stop low of day'][j]:
+                            io_list.loc[j, 'Stop price [$]'] = io_list.loc[j, 'LOW price [$]']
+                            io_list_update.loc[j, 'Stop price [$]'] = io_list.loc[j, 'Stop price [$]']
+                            io_list.loc[j, 'Stop low of day'] = io_list_update['Stop low of day'][j]
+                            MyUtilities.dailytradingplan_stop_update(j, io_list['Stop price [$]'][j],
+                                                                     NAME_OF_DAILYTRADINGPLAN)
 
                         if not io_list['Open position'][j] and io_list['Stop low of day'][j] and \
                                 io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j]:
@@ -793,6 +806,8 @@ class TestApp(TestWrapper, TestClient):
 
                         io_list.loc[j, 'Stop price [$]'] = io_list_update['Stop price [$]'][j]
                         io_list.loc[j, 'Profit taker price [$]'] = io_list_update['Profit taker price [$]'][j]
+                        io_list.loc[j, 'Sell on close'] = io_list_update['Sell on close'][j]
+                        io_list.loc[j, 'Sell bellow SMA [$]'] = io_list_update['Sell bellow SMA [$]'][j]
 
                         # Cancel current bracket oder
                         self.cancelOrder(int(io_list['profitOrderId'][j]), "")
@@ -826,11 +841,17 @@ class TestApp(TestWrapper, TestClient):
                     # Updating new positions that did not execute
                     elif not io_list['Open position'][j] and not io_list['Crossed buy price'][j] and \
                             (
-                                    io_list_update['Entry price [$]'][j] != io_list['Entry price [$]'][j] or
-                                    io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j] or
-                                    io_list_update['Quantity [#]'][j] != io_list['Quantity [#]'][j] or
-                                    io_list_update['Buy limit price [$]'][j] != io_list['Buy limit price [$]'][j] or
-                                    io_list_update['Profit taker price [$]'][j] != io_list['Profit taker price [$]'][j]
+                                io_list_update['Entry price [$]'][j] != io_list['Entry price [$]'][j] or
+                                io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j] or
+                                io_list_update['Quantity [#]'][j] != io_list['Quantity [#]'][j] or
+                                io_list_update['Buy limit price [$]'][j] != io_list['Buy limit price [$]'][j] or
+                                io_list_update['Profit taker price [$]'][j] != io_list['Profit taker price [$]'][j] or
+                                io_list_update['Sell on close'][j] != io_list['Sell on close'][j] or
+                                io_list_update['Stop low of day'][j] != io_list['Stop low of day'][j] or
+                                (not (pd.isna(io_list_update['Sell bellow SMA [$]'][j]) and pd.isna(
+                                    io_list['Sell bellow SMA [$]'][j]))
+                                 and io_list_update['Sell bellow SMA [$]'][j] != io_list['Sell bellow SMA [$]'][j])
+
                             ):
 
                         io_list.loc[j, 'Entry price [$]'] = io_list_update['Entry price [$]'][j]
@@ -838,6 +859,9 @@ class TestApp(TestWrapper, TestClient):
                         io_list.loc[j, 'Quantity [#]'] = io_list_update['Quantity [#]'][j]
                         io_list.loc[j, 'Buy limit price [$]'] = io_list_update['Buy limit price [$]'][j]
                         io_list.loc[j, 'Profit taker price [$]'] = io_list_update['Profit taker price [$]'][j]
+                        io_list.loc[j, 'Sell on close'] = io_list_update['Sell on close'][j]
+                        io_list.loc[j, 'Stop low of day'] = io_list_update['Stop low of day'][j]
+                        io_list.loc[j, 'Sell bellow SMA [$]'] = io_list_update['Sell bellow SMA [$]'][j]
 
                         print(f"\nStock ID: {j} {io_list['Symbol'][j]} - New position data is updated acc. to new plan."
                               f"( {time_now_str} )")
