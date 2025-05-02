@@ -16,10 +16,10 @@ class MyOrders:
         parent.orderType = "LMT"
         parent.action = "BUY"
         parent.tif = "GTD"
-        # Order cancelled in two minute from now if it does not get filled
+        # Order cancelled in 1 minute from now if it does not get filled
         # I want to avoid that price runs away and fills when it comes back in - this would not be directional
         parent.goodTillDate = \
-            (datetime.datetime.now().astimezone(pytz.timezone(timezone)) + datetime.timedelta(minutes=2)) \
+            (datetime.datetime.now().astimezone(pytz.timezone(timezone)) + datetime.timedelta(minutes=1)) \
                 .strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
         parent.lmtPrice = round(io_list['Buy limit price [$]'][req_id], 2)
         parent.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
@@ -55,7 +55,7 @@ class MyOrders:
             market_on_close_order.action = "SELL"
             market_on_close_order.tif = "DAY"
             market_on_close_order.goodAfterTime = \
-                (market_close - datetime.timedelta(minutes=5)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
+                (market_close - datetime.timedelta(minutes=3)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
             market_on_close_order.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
             market_on_close_order.parentId = parent_order_id
             market_on_close_order.transmit = True
@@ -117,7 +117,7 @@ class MyOrders:
             market_on_close_order.tif = "DAY"
             market_on_close_order.ocaGroup = "OCA_" + str(order_id)
             market_on_close_order.goodAfterTime = \
-                (market_close - datetime.timedelta(minutes=5)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
+                (market_close - datetime.timedelta(minutes=3)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
             market_on_close_order.totalQuantity = total_quantity
             market_on_close_order.ocaType = 2
 

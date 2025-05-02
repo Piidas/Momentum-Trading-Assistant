@@ -723,7 +723,8 @@ class TestApp(TestWrapper, TestClient):
 
         # Updating DailyTradingPlan
         # Function reads DailyTradingPlan every few seconds and checks for updates (open and new positions)
-        if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=10) < time_now:
+        if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=10) < time_now < \
+                market_close - (datetime.timedelta(minutes=5)):
 
             success_reading_xls = True
             io_list_update = None
@@ -1006,8 +1007,8 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Order executed [time]'] = time_now.strftime("%y%m%d %H:%M:%S")
 
                 # Blocks execution of buy order shortly before market close for "sell on close" stock
-                # 15 minutes since at t-8min the brackets got replaced and t-5min the sells are done
-                if time_now > market_close - (datetime.timedelta(minutes=15)) and io_list['Sell on close'][reqId]:
+                # 5 minutes since at t-4min the brackets got replaced and t-3min the sells are done
+                if time_now > market_close - (datetime.timedelta(minutes=5)) and io_list['Sell on close'][reqId]:
                     print(
                         f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} will be sold on close - buy not executed."
                         f"( {time_now_str} )")
@@ -1176,7 +1177,7 @@ class TestApp(TestWrapper, TestClient):
                   time_now_str, ")")
 
         # SOC SMA Function: Cancels open orders and places new bracket without sell on close order
-        if time_now > market_close - (datetime.timedelta(minutes=8)) and \
+        if time_now > market_close - (datetime.timedelta(minutes=4)) and \
                 not io_list['Stock sold'][reqId] and io_list['Sell on close'][reqId] and \
                 pd.notna(io_list['Sell bellow SMA [$]'][reqId]) and \
                 io_list['Profit taker price [$]'][reqId] > io_list['LAST price [$]'][reqId] > \
@@ -1191,6 +1192,7 @@ class TestApp(TestWrapper, TestClient):
 
             # Important so that he places a bracket without SOC order
             io_list.loc[reqId, 'Sell on close'] = False
+
 
             # Cancels current bracket oder
             self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
