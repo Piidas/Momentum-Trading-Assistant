@@ -747,8 +747,14 @@ class TestApp(TestWrapper, TestClient):
                 success_reading_xls = False
 
             if success_reading_xls:
-                # Applies the necessary datatypes again
-                io_list_update = MyUtilities.clean_up_data_frame(io_list_update, tick_data, return_both_dataframes=False)
+                # Applies the necessary datatypes again only if excel was read propperly
+                if io_list_update is None:
+                    print("Couldn’t reload DailyTradingPlan – skipping update.")
+                    return
+                else:
+                    io_list_update = MyUtilities.clean_up_data_frame(
+                        io_list_update, tick_data, return_both_dataframes=False
+                    )
 
                 for j in range(len(io_list_update)):
 
