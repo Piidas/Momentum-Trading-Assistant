@@ -1033,7 +1033,7 @@ class TestApp(TestWrapper, TestClient):
                     else:
                         io_list.loc[reqId, 'Stop price [$]'] = io_list['LAST price [$]'][reqId] * 0.99
                         print(
-                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} low of the day is too tight -"
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} low of the day is too tight, therefore "
                             f"-1% stop of {io_list['Stop price [$]'][reqId]} is used instead. ( {time_now_str} )")
 
                     MyUtilities.dailytradingplan_stop_update(reqId, io_list['Stop price [$]'][reqId],
