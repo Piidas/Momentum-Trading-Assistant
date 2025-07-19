@@ -79,14 +79,14 @@ class MyUtilities:
 
         # Define a list of column names to apply the lambda operation to
         bool_columns_to_convert = ['Open position', 'Add and reduce', 'Sell on close', 'Stop low of day',
-                                   'Stop undercut', 'Crossed buy price',
+                                   'Sell negative on day 1', 'Stop undercut', 'Crossed buy price',
                                    'Order executed', 'Order filled', 'Profit order filled', 'Stop order filled',
                                    'SOC order filled', '2% above buy point', 'New OCA bracket', '5% above buy point',
                                    'Bad close rule', 'Stock sold', 'Spread above limit', 'Price above limit',
                                    'Stock looped', 'Open position bracket submitted', 'Add and reduce executed',
                                    'Open position updated', 'New position updated', 'New position added',
                                    'Invest limit reached', 'Position below limit', 'Max. daily loss reached',
-                                   'Bad close checked']
+                                   'Bad close checked', 'Negative close checked']
 
         # Define a list of column names to apply the conversion to str
         str_columns_to_convert = ['Symbol', 'Company name', 'Stop undercut [time]', 'Crossed buy price [time]',
@@ -239,6 +239,12 @@ class MyUtilities:
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
+                if remaining == 0:
+                    io_list.loc[index, 'Stock sold'] = True
+                    io_list.loc[index, 'Stock sold [time]'] = \
+                        datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
                 pass
@@ -252,6 +258,12 @@ class MyUtilities:
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
+                if remaining == 0:
+                    io_list.loc[index, 'Stock sold'] = True
+                    io_list.loc[index, 'Stock sold [time]'] = \
+                        datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
                 pass
@@ -265,6 +277,12 @@ class MyUtilities:
                 if filled > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining)
+                if remaining == 0:
+                    io_list.loc[index, 'Stock sold'] = True
+                    io_list.loc[index, 'Stock sold [time]'] = \
+                        datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
                 pass
@@ -403,7 +421,7 @@ class MyUtilities:
             print(f"Failed to save Excel output '{filename}': {e}")
 
     @staticmethod
-    def dailytradingplan_stop_update(i, stop_loss_price, name_of_dailytradingplan):
+    def dailytradingplan_update(i, stop_loss_price, stock_quantity, name_of_dailytradingplan):
         """
         Updates the stop loss price in the DailyTradingPlan Excel file.
 
@@ -431,9 +449,13 @@ class MyUtilities:
                 workbook = load_workbook(filename=file_path)
                 sheet = workbook.active
 
-                # Determine the cell to update (e.g., "I3" if i=1)
+                # Determine the cell to update stop (e.g., "I3" if i=1)
                 cell_name = f"I{i + 2}"  # Adjusting index for Excel row (assuming headers are in row 1)
                 sheet[cell_name] = stop_loss_price
+
+                # Determine the cell to update quantity (e.g., "I3" if i=1)
+                cell_name = f"J{i + 2}"  # Adjusting index for Excel row (assuming headers are in row 1)
+                sheet[cell_name] = stock_quantity
 
                 # Save the workbook
                 workbook.save(filename=file_path)

@@ -723,6 +723,7 @@ class TestApp(TestWrapper, TestClient):
 
         # Updating DailyTradingPlan
         # Function reads DailyTradingPlan every few seconds and checks for updates (open and new positions)
+        # Stops working 5 minutes before the close
         if update_DailyTradingPlan_timestamp + datetime.timedelta(seconds=10) < time_now < \
                 market_close - (datetime.timedelta(minutes=5)):
 
@@ -801,8 +802,8 @@ class TestApp(TestWrapper, TestClient):
                             io_list.loc[j, 'Stop price [$]'] = io_list.loc[j, 'LOW price [$]']
                             io_list_update.loc[j, 'Stop price [$]'] = io_list.loc[j, 'Stop price [$]']
                             io_list.loc[j, 'Stop low of day'] = io_list_update['Stop low of day'][j]
-                            MyUtilities.dailytradingplan_stop_update(j, io_list['Stop price [$]'][j],
-                                                                     NAME_OF_DAILYTRADINGPLAN)
+                            MyUtilities.dailytradingplan_update(j, io_list['Stop price [$]'][j],
+                                                        io_list['Quantity [#]'][j], NAME_OF_DAILYTRADINGPLAN)
 
                         if not io_list['Open position'][j] and io_list['Stop low of day'][j] and \
                                 io_list_update['Stop price [$]'][j] != io_list['Stop price [$]'][j]:
@@ -890,20 +891,22 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Stop undercut [time]'] = time_now_str
             print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} has undercut the stop. ( {time_now_str} )")
 
-        # Sets marker if stock is sold for open positions and new positions
-        if (
-                (
-                        io_list['Open position'][reqId] or
-                        (not io_list['Open position'][reqId] and io_list['Order filled'][reqId])
-                ) and
-                not io_list['Stock sold'][reqId]
-        ) and \
-                (
-                        io_list['Profit order filled'][reqId] or io_list['Stop order filled'][reqId] or
-                        io_list['SOC order filled'][reqId]
-                ):
-            io_list.loc[reqId, 'Stock sold'] = True
-            io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
+        # SHIFTED THIS TO MyUtilities.py
+        # TEST
+        # # Sets marker if stock is sold for open positions and new positions
+        # if (
+        #         (
+        #                 io_list['Open position'][reqId] or
+        #                 (not io_list['Open position'][reqId] and io_list['Order filled'][reqId])
+        #         ) and
+        #         not io_list['Stock sold'][reqId]
+        # ) and \
+        #         (
+        #                 io_list['Profit order filled'][reqId] or io_list['Stop order filled'][reqId] or
+        #                 io_list['SOC order filled'][reqId]
+        #         ):
+        #     io_list.loc[reqId, 'Stock sold'] = True
+        #     io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
 
         # Only continues if all relevant data points are defined and parameters given
         if pd.isnull(percent_invested) or portfolio_size is None or percent_invested is None or \
@@ -1013,16 +1016,19 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Order executed [time]'] = time_now.strftime("%y%m%d %H:%M:%S")
 
                 # Blocks execution of buy order shortly before market close for "sell on close" stock
-                # 5 minutes since at t-4min the brackets got replaced and t-3min the sells are done
+                # 5 minutes since at t-4min the SOC brackets get replaced and t-3min the sells are done
                 if time_now > market_close - (datetime.timedelta(minutes=5)) and io_list['Sell on close'][reqId]:
                     print(
-                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} will be sold on close - buy not executed."
+                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} shall be sold on close - buy not executed."
                         f"( {time_now_str} )")
 
                     return
 
                 if io_list['Stop low of day'][reqId] and \
                         io_list['LOW price [$]'][reqId] > io_list['Stop price [$]'][reqId]:
+
+                    stop_risk_abs = (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]) * \
+                                         io_list['Quantity [#]'][reqId]
 
                     # Ensures a min. -1% stop
                     if io_list['LAST price [$]'][reqId] * 0.99 > io_list['LOW price [$]'][reqId]:
@@ -1036,8 +1042,16 @@ class TestApp(TestWrapper, TestClient):
                             f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} low of the day is too tight, therefore "
                             f"-1% stop of {io_list['Stop price [$]'][reqId]} is used instead. ( {time_now_str} )")
 
-                    MyUtilities.dailytradingplan_stop_update(reqId, io_list['Stop price [$]'][reqId],
-                                                             NAME_OF_DAILYTRADINGPLAN)
+                    # Adjust position size to match pre-defined absolute risk
+                    new_quantity = stop_risk_abs / (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId])
+                    print(
+                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} buy quantity changed from "
+                        f"{io_list['Quantity [#]'][reqId]} to {round(new_quantity, 0)}. ( {time_now_str} )")
+                    print("### Attention ### Do not unintentionally overwrite buy quantity for open position.")
+                    io_list.loc[reqId, 'Quantity [#]'] = round(new_quantity, 0)
+
+                    MyUtilities.dailytradingplan_update(reqId, io_list['Stop price [$]'][reqId],
+                                                        io_list['Quantity [#]'][reqId], NAME_OF_DAILYTRADINGPLAN)
 
                 contract = MyUtilities.get_contract_details(io_list, reqId)
                 bracket, io_list = MyOrders.bracket_order(self.nextOrderId(), reqId, TIMEZONE, ib_timezone_str,
@@ -1083,7 +1097,8 @@ class TestApp(TestWrapper, TestClient):
                     io_list.loc[i, 'Stop price [$]'] = aux_price
 
                     # Changes stop price in DailyTradingPlan
-                    MyUtilities.dailytradingplan_stop_update(i, aux_price, NAME_OF_DAILYTRADINGPLAN)
+                    MyUtilities.dailytradingplan_update(i, aux_price, io_list['Quantity [#]'][i],
+                                                        NAME_OF_DAILYTRADINGPLAN)
 
                     print(f"\nStock ID: {i} {io_list['Symbol'][i]} - Add and reduce executed. ( {time_now_str} )")
 
@@ -1175,7 +1190,8 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId]
 
             # Changes stop price in DailyTradingPlan
-            MyUtilities.dailytradingplan_stop_update(reqId, aux_price, NAME_OF_DAILYTRADINGPLAN)
+            MyUtilities.dailytradingplan_update(reqId, aux_price, io_list['Quantity [#]'][reqId],
+                                                NAME_OF_DAILYTRADINGPLAN)
 
             print("\nStock ID:", reqId, io_list['Symbol'][reqId],
                   "increased", round(SELL_FULL_REVERSAL_RULE * 100, 1),
@@ -1198,7 +1214,6 @@ class TestApp(TestWrapper, TestClient):
 
             # Important so that he places a bracket without SOC order
             io_list.loc[reqId, 'Sell on close'] = False
-
 
             # Cancels current bracket oder
             self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
@@ -1227,8 +1242,7 @@ class TestApp(TestWrapper, TestClient):
 
             if not io_list['Open position'][reqId] and \
                     io_list['Order filled'][reqId] and not io_list['Stock sold'][reqId] and \
-                    not io_list['Sell on close'][reqId] and pd.isnull(
-                io_list['Sell bellow SMA [$]'][reqId]) and \
+                    not io_list['Sell on close'][reqId] and pd.isnull(io_list['Sell bellow SMA [$]'][reqId]) and \
                     not io_list['5% above buy point'][reqId] and not io_list['New OCA bracket'][reqId] and \
                     not io_list['Bad close rule'][reqId] and round(io_list['Quantity [#]'][reqId], 0) > 1 and \
                     (
@@ -1259,6 +1273,32 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Bad close rule'] = True
                 io_list.loc[reqId, 'Bad close rule [time]'] = time_now_str
                 io_list.loc[reqId, 'Quantity [#]'] = total_quantity
+
+        ### Code ist done
+        ### Not tested
+        ### Must also be translated to CK Version
+        # Sells the position 2 minutes before the close if it is negative on day 1
+        if time_now > market_close - (datetime.timedelta(minutes=2)) and io_list['Sell negative on day 1'][reqId] and \
+                not io_list['Negative close checked'][reqId]:
+
+            io_list.loc[reqId, 'Negative close checked'] = True
+
+            if not io_list['Open position'][reqId] and \
+                    io_list['Order filled'][reqId] and not io_list['Stock sold'][reqId] and \
+                    not io_list['Sell on close'][reqId] and pd.isnull(io_list['Sell bellow SMA [$]'][reqId]) and \
+                    io_list['LAST price [$]'][reqId] < io_list['Entry price [$]'][reqId]:
+
+                # Cancels current bracket oder
+                self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+
+                # Shoot market sell order
+                contract = MyUtilities.get_contract_details(io_list, reqId)
+                total_quantity = io_list['Quantity [#]'][reqId]
+                order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
+                self.placeOrder(order.orderId, contract, order)
+                io_list.loc[reqId, 'Quantity [#]'] = 0
+                print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} attempts to close negative - stock sold. "
+                      f"( {time_now_str} )")
 
     @iswrapper
     def tickSize(self, reqId: TickerId, tickType: TickType, size: Decimal):
