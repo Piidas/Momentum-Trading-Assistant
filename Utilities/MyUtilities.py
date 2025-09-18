@@ -34,28 +34,28 @@ class MyUtilities:
     def feed_price_io_lists(io_list, io_list_copy_for_tick_data, tick_type, req_id, price):
 
         if tick_type == "CLOSE":
-            io_list.loc[req_id, 'CLOSE price [$]'] = price
-            io_list_copy_for_tick_data.loc[req_id, 'CLOSE price [$]'] = price
+            io_list.loc[req_id, 'CLOSE price [$]'] = round(price, 2)
+            io_list_copy_for_tick_data.loc[req_id, 'CLOSE price [$]'] = round(price, 2)
 
         if tick_type == "BID":
-            io_list.loc[req_id, 'BID price [$]'] = price
-            io_list_copy_for_tick_data.loc[req_id, 'BID price [$]'] = price
+            io_list.loc[req_id, 'BID price [$]'] = round(price, 2)
+            io_list_copy_for_tick_data.loc[req_id, 'BID price [$]'] = round(price, 2)
 
         if tick_type == "ASK":
-            io_list.loc[req_id, 'ASK price [$]'] = price
-            io_list_copy_for_tick_data.loc[req_id, 'ASK price [$]'] = price
+            io_list.loc[req_id, 'ASK price [$]'] = round(price, 2)
+            io_list_copy_for_tick_data.loc[req_id, 'ASK price [$]'] = round(price, 2)
 
         if tick_type == "LAST":
-            io_list.loc[req_id, 'LAST price [$]'] = price
-            io_list_copy_for_tick_data.loc[req_id, 'LAST price [$]'] = price
+            io_list.loc[req_id, 'LAST price [$]'] = round(price, 2)
+            io_list_copy_for_tick_data.loc[req_id, 'LAST price [$]'] = round(price, 2)
 
         if tick_type == "HIGH":
             if pd.isnull(io_list['HIGH price [$]'][req_id]) or price > io_list['HIGH price [$]'][req_id]:
-                io_list.loc[req_id, 'HIGH price [$]'] = price
+                io_list.loc[req_id, 'HIGH price [$]'] = round(price, 2)
 
         if tick_type == "LOW":
             if pd.isnull(io_list['LOW price [$]'][req_id]) or price < io_list['LOW price [$]'][req_id]:
-                io_list.loc[req_id, 'LOW price [$]'] = price
+                io_list.loc[req_id, 'LOW price [$]'] = round(price, 2)
 
         return io_list, io_list_copy_for_tick_data
 
