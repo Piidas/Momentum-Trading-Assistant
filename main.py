@@ -661,7 +661,7 @@ class TestApp(TestWrapper, TestClient):
                     contract = MyUtilities.get_contract_details(io_list, reqId)
                     total_quantity = round(io_list['Quantity [#]'][reqId], 0)
                     orderId = self.nextOrderId()
-                    order = MyOrders.sell_market_order(orderId, total_quantity)
+                    order, io_list = MyOrders.sell_market_order(orderId, reqId, total_quantity, io_list)
                     self.placeOrder(order.orderId, contract, order)
 
                     io_list.loc[reqId, 'Open position bracket submitted'] = True
@@ -825,26 +825,32 @@ class TestApp(TestWrapper, TestClient):
                             # Shoot market sell order
                             contract = MyUtilities.get_contract_details(io_list, j)
                             total_quantity = round(io_list['Quantity [#]'][j] - io_list_update['Quantity [#]'][j], 0)
-                            order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
+                            order, io_list = MyOrders.sell_market_order(self.nextOrderId(), j, total_quantity, io_list)
                             self.placeOrder(order.orderId, contract, order)
                             io_list.loc[j, 'Quantity [#]'] = io_list_update['Quantity [#]'][j]
 
-                        # Place new OCA profit taker with adjusted stop loss
-                        contract = MyUtilities.get_contract_details(io_list, j)
-                        total_quantity = round(io_list['Quantity [#]'][j], 0)
-                        lmt_price = round(io_list['Profit taker price [$]'][j], 2)
-                        aux_price = round(io_list['Stop price [$]'][j], 2)
-                        oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price,
-                                                                j, TIMEZONE, ib_timezone_str, market_close, io_list)
-                        for o in oca:
-                            self.placeOrder(o.orderId, contract, o)
-                            self.nextOrderId()
+                            if io_list_update['Quantity [#]'][j] == 0:
+                                io_list.loc[j, 'Stock sold'] = True
+                                io_list.loc[j, 'Stock sold [time]'] = time_now_str
+                                print(f"\nStock ID: {j} {io_list['Symbol'][j]} completely sold. ( {time_now_str} )")
 
-                        print(f"\nStock ID: {j} {io_list['Symbol'][j]} - Open position bracket updated acc. to new plan."
-                              f"( {time_now_str} )")
+                        if io_list_update['Quantity [#]'][j] > 0:
+                            # Place new OCA profit taker with adjusted stop loss
+                            contract = MyUtilities.get_contract_details(io_list, j)
+                            total_quantity = round(io_list['Quantity [#]'][j], 0)
+                            lmt_price = round(io_list['Profit taker price [$]'][j], 2)
+                            aux_price = round(io_list['Stop price [$]'][j], 2)
+                            oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price,
+                                                                    j, TIMEZONE, ib_timezone_str, market_close, io_list)
+                            for o in oca:
+                                self.placeOrder(o.orderId, contract, o)
+                                self.nextOrderId()
 
-                        io_list.loc[j, 'Open position updated'] = True
-                        io_list.loc[j, 'Open position updated [time]'] = time_now_str
+                            print(f"\nStock ID: {j} {io_list['Symbol'][j]} - Open position bracket updated acc. to new plan."
+                                  f"( {time_now_str} )")
+
+                            io_list.loc[j, 'Open position updated'] = True
+                            io_list.loc[j, 'Open position updated [time]'] = time_now_str
 
                     # Updating new positions that did not execute
                     elif not io_list['Open position'][j] and not io_list['Crossed buy price'][j] and \
@@ -1136,7 +1142,7 @@ class TestApp(TestWrapper, TestClient):
             # Shoot market sell order for 50%
             contract = MyUtilities.get_contract_details(io_list, reqId)
             total_quantity = math.ceil(round(io_list['Quantity [#]'][reqId], 0) / 2)
-            order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
+            order, io_list = MyOrders.sell_market_order(self.nextOrderId(), reqId, total_quantity, io_list)
             self.placeOrder(order.orderId, contract, order)
 
             print(
@@ -1256,7 +1262,7 @@ class TestApp(TestWrapper, TestClient):
                 # Shoot market sell order for 50%
                 contract = MyUtilities.get_contract_details(io_list, reqId)
                 total_quantity = math.ceil(round(io_list['Quantity [#]'][reqId], 0) / 2)
-                order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
+                order, io_list = MyOrders.sell_market_order(self.nextOrderId(), reqId, total_quantity, io_list)
                 self.placeOrder(order.orderId, contract, order)
 
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} attempts a bad close - sold half. "
@@ -1274,9 +1280,6 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Bad close rule [time]'] = time_now_str
                 io_list.loc[reqId, 'Quantity [#]'] = total_quantity
 
-        ### Code ist done
-        ### Not tested
-        ### Must also be translated to CK Version
         # Sells the position 2 minutes before the close if it is negative on day 1
         if time_now > market_close - (datetime.timedelta(minutes=2)) and io_list['Sell negative on day 1'][reqId] and \
                 not io_list['Negative close checked'][reqId]:
@@ -1294,11 +1297,56 @@ class TestApp(TestWrapper, TestClient):
                 # Shoot market sell order
                 contract = MyUtilities.get_contract_details(io_list, reqId)
                 total_quantity = io_list['Quantity [#]'][reqId]
-                order = MyOrders.sell_market_order(self.nextOrderId(), total_quantity)
+                order, io_list = MyOrders.sell_market_order(self.nextOrderId(), reqId, total_quantity, io_list)
                 self.placeOrder(order.orderId, contract, order)
                 io_list.loc[reqId, 'Quantity [#]'] = 0
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} attempts to close negative - stock sold. "
                       f"( {time_now_str} )")
+                io_list.loc[reqId, 'Stock sold'] = True
+                io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
+
+        # Sells half of the position for profit at x-R on day 1 to cushion risk
+        if (pd.notna(io_list['Profit at x-R'][reqId]) and not io_list['Open position'][reqId] and \
+                    io_list['Order filled'][reqId] and not io_list['Stock sold'][reqId] and \
+                    not io_list['x-R profits'][reqId]):
+
+            if io_list['Profit at x-R'][reqId] <= 0:
+                print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} x-R multiple must be positive and >0. "
+                      f"( {time_now_str} )")
+                io_list.loc[reqId, 'x-R profits'] = True
+                return
+
+            stop_risk_rel = (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]) / \
+                            io_list['Entry price [$]'][reqId]
+            profit_price = (io_list['Profit at x-R'][reqId] * stop_risk_rel + 1) * io_list['Entry price [$]'][reqId]
+
+            # Shoot market order for 50% of the position in case first profit target is reached
+            if profit_price <= io_list['LAST price [$]'][reqId]:
+                io_list.loc[reqId, 'x-R profits'] = True
+                # Cancels current bracket oder
+                self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+
+                # Shoot market sell order for 50%
+                contract = MyUtilities.get_contract_details(io_list, reqId)
+                total_quantity = math.ceil(round(io_list['Quantity [#]'][reqId], 0) / 2)
+                order, io_list = MyOrders.sell_market_order(self.nextOrderId(), reqId, total_quantity, io_list)
+                self.placeOrder(order.orderId, contract, order)
+
+                print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} reached {io_list['Profit at x-R'][reqId]}-times "
+                      f"risk at {io_list['LAST price [$]'][reqId]} for "
+                      f"{round(io_list['Profit at x-R'][reqId] * 100 * stop_risk_rel, 1)}% profit - "
+                      f"sold half. ( {time_now_str} )")
+
+                total_quantity = math.floor(round(io_list['Quantity [#]'][reqId], 0) / 2)
+                lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
+                aux_price = round(io_list['Stop price [$]'][reqId], 2)
+                oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
+                                                        TIMEZONE, ib_timezone_str, market_close, io_list)
+                for o in oca:
+                    self.placeOrder(o.orderId, contract, o)
+                    self.nextOrderId()
+                io_list.loc[reqId, 'x-R profits [time]'] = time_now_str
+                io_list.loc[reqId, 'Quantity [#]'] = total_quantity
 
     @iswrapper
     def tickSize(self, reqId: TickerId, tickType: TickType, size: Decimal):

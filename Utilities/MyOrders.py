@@ -143,7 +143,7 @@ class MyOrders:
         return oca, io_list
 
     @staticmethod
-    def sell_market_order(order_id, total_quantity):
+    def sell_market_order(order_id, req_id, total_quantity, io_list):
         # Create Parent Order / Initial Entry
         order = Order()
         order.orderId = order_id
@@ -151,4 +151,7 @@ class MyOrders:
         order.action = "SELL"
         order.totalQuantity = total_quantity
 
-        return order
+        # Reporting
+        io_list.loc[req_id, 'marketOrderId'] = order_id
+
+        return order, io_list

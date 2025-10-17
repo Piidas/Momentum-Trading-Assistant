@@ -81,9 +81,10 @@ class MyUtilities:
         bool_columns_to_convert = ['Open position', 'Add and reduce', 'Sell on close', 'Stop low of day',
                                    'Sell negative on day 1', 'Stop undercut', 'Crossed buy price',
                                    'Order executed', 'Order filled', 'Profit order filled', 'Stop order filled',
-                                   'SOC order filled', '2% above buy point', 'New OCA bracket', '5% above buy point',
-                                   'Bad close rule', 'Stock sold', 'Spread above limit', 'Price above limit',
-                                   'Stock looped', 'Open position bracket submitted', 'Add and reduce executed',
+                                   'Market order filled', 'SOC order filled', '2% above buy point', 'New OCA bracket',
+                                   '5% above buy point', 'Bad close rule', 'x-R profits', 'Stock sold',
+                                   'Spread above limit', 'Price above limit', 'Stock looped',
+                                   'Open position bracket submitted', 'Add and reduce executed',
                                    'Open position updated', 'New position updated', 'New position added',
                                    'Invest limit reached', 'Position below limit', 'Max. daily loss reached',
                                    'Bad close checked', 'Negative close checked']
@@ -91,7 +92,8 @@ class MyUtilities:
         # Define a list of column names to apply the conversion to str
         str_columns_to_convert = ['Symbol', 'Company name', 'Stop undercut [time]', 'Crossed buy price [time]',
                                   'Order executed [time]', 'New OCA bracket [time]', '5% above buy point [time]',
-                                  'Bad close rule [time]', 'Stock sold [time]', 'Open position updated [time]',
+                                  'Bad close rule [time]', 'x-R profits [time]', 'Stock sold [time]',
+                                  'Open position updated [time]',
                                   'New position updated [time]', 'New position added [time]', 'Stop timestamp',
                                   'Invest limit reached [time]', 'Max. daily loss reached [time]', 'liquidHours',
                                   'timeZoneId', 'local opening time', 'local closing time']
@@ -99,8 +101,9 @@ class MyUtilities:
         # Define a list of column names to apply the conversion to float
         float_columns_to_convert = ['Entry price [$]', 'Stop price [$]', 'Buy limit price [$]',
                                     'Profit taker price [$]', 'Sell bellow SMA [$]', 'Spread at execution [%]',
+                                    'Profit at x-R',
                                     'Last stop price', 'LAST price [$]', 'BID price [$]', 'ASK price [$]',
-                                    'HIGH price [$]', 'LOW price [$]', 'CLOSE price [$]']
+                                    'HIGH price [$]', 'LOW price [$]', 'CLOSE price [$]', 'Market sell price [$]']
 
         # Apply the bool lambda operation to each specified column
         for col in bool_columns_to_convert:
@@ -283,6 +286,16 @@ class MyUtilities:
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
                     print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
                           datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
+
+            except:
+                pass
+
+            try:
+                index = io_list[io_list['marketOrderId'] == order_id].index.item()
+                io_list.loc[index, 'Market order filled'] = True
+                io_list.loc[index, 'Market sell price [$]'] = last_fill_price
+                print("\nStock ID:", index, io_list['Symbol'][index], "Market order filled. (",
+                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
                 pass
