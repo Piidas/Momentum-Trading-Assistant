@@ -10,6 +10,13 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
+def _to_float(x, default=0.0):
+    try:
+        # handles str, Decimal, int, float, None
+        return float(x)
+    except (TypeError, ValueError):
+        return default
+
 
 class MyUtilities:
 
@@ -68,7 +75,7 @@ class MyUtilities:
         contract.secType = io_list['Security Type'][req_id]
         contract.currency = io_list['Currency'][req_id]
         contract.exchange = io_list['Exchange'][req_id]
-        contract.primaryExchange = io_list['Primary Exchange'][req_id]
+        contract.primaryExch = io_list['Primary Exchange'][req_id]
 
         return contract
 
@@ -217,18 +224,22 @@ class MyUtilities:
     @staticmethod
     def update_io_list_order_execution_status(status, order_id, last_fill_price, filled, remaining, io_list, timezone):
 
+        filled_f = _to_float(filled, 0.0)
+        remaining_f = _to_float(remaining, 0.0)
+        last_fill_f = _to_float(last_fill_price, 0.0)
+
         # "Tries" need to find the relevant order_id to confirm the "Filled" status
         if status == "Filled" or ((status == "PreSubmitted" or status == "Submitted" or
-                                   status == "PendingCancel" or status == "Cancelled") and filled > 0):
+                                   status == "PendingCancel" or status == "Cancelled") and filled_f > 0):
 
             try:
                 index = io_list[io_list['parentOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Order filled'] = True
-                io_list.loc[index, 'Entry price [$]'] = last_fill_price
+                io_list.loc[index, 'Entry price [$]'] = last_fill_f
                 print("\nStock ID:", index, io_list['Symbol'][index], "buy order filled. (",
                       datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
-                if filled > 0:
-                    io_list.loc[index, 'Quantity [#]'] = int(filled)
+                if filled_f > 0:
+                    io_list.loc[index, 'Quantity [#]'] = int(filled_f)
 
             except:
                 pass
@@ -236,13 +247,13 @@ class MyUtilities:
             try:
                 index = io_list[io_list['profitOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Profit order filled'] = True
-                io_list.loc[index, 'Profit taker price [$]'] = last_fill_price
+                io_list.loc[index, 'Profit taker price [$]'] = last_fill_f
                 print("\nStock ID:", index, io_list['Symbol'][index], "profit order filled. (",
                       datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
-                if filled > 0:
+                if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
-                    io_list.loc[index, 'Quantity [#]'] = int(remaining)
-                if remaining == 0:
+                    io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
+                if remaining_f == 0:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
@@ -255,13 +266,13 @@ class MyUtilities:
             try:
                 index = io_list[io_list['stopOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Stop order filled'] = True
-                io_list.loc[index, 'Stop price [$]'] = last_fill_price
+                io_list.loc[index, 'Stop price [$]'] = last_fill_f
                 print("\nStock ID:", index, io_list['Symbol'][index], "stop loss order filled. (",
                       datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
-                if filled > 0:
+                if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
-                    io_list.loc[index, 'Quantity [#]'] = int(remaining)
-                if remaining == 0:
+                    io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
+                if remaining_f == 0:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
@@ -274,13 +285,13 @@ class MyUtilities:
             try:
                 index = io_list[io_list['sellOnCloseOrderId'] == order_id].index.item()
                 io_list.loc[index, 'SOC order filled'] = True
-                io_list.loc[index, 'Sell bellow SMA [$]'] = last_fill_price
+                io_list.loc[index, 'Sell bellow SMA [$]'] = last_fill_f
                 print("\nStock ID:", index, io_list['Symbol'][index], "SOC order filled. (",
                       datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
-                if filled > 0:
+                if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
-                    io_list.loc[index, 'Quantity [#]'] = int(remaining)
-                if remaining == 0:
+                    io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
+                if remaining_f == 0:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
@@ -293,7 +304,7 @@ class MyUtilities:
             try:
                 index = io_list[io_list['marketOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Market order filled'] = True
-                io_list.loc[index, 'Market sell price [$]'] = last_fill_price
+                io_list.loc[index, 'Market sell price [$]'] = last_fill_f
                 print("\nStock ID:", index, io_list['Symbol'][index], "Market order filled. (",
                       datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 

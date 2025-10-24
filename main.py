@@ -27,9 +27,11 @@ from ibapi.common import *
 from ibapi.order_condition import *
 from ibapi.contract import *
 from ibapi.order import *
+from ibapi.order_cancel import OrderCancel
 from ibapi.order_state import *
 from ibapi.execution import Execution
-from ibapi.commission_report import CommissionReport
+# NEW in 10.37+
+from ibapi.commission_and_fees_report import CommissionAndFeesReport
 from ibapi.ticktype import *
 from ibapi.tag_value import TagValue
 
@@ -335,13 +337,15 @@ class TestApp(TestWrapper, TestClient):
         return oid
 
     @iswrapper
-    def error(self, reqId: TickerId, errorCode: int, errorString: str, advancedOrderRejectJson=""):
-        super().error(reqId, errorCode, errorString, advancedOrderRejectJson)
+    def error(self, reqId: int, errorTime: str, errorCode: int, errorMsg: str, advancedOrderRejectJson: str = ""):
+        super().error(reqId, errorTime, errorCode, errorMsg, advancedOrderRejectJson)
         if advancedOrderRejectJson:
-            print("Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString, "AdvancedOrderRejectJson:",
-                  advancedOrderRejectJson)
+            print(
+                f"[{errorTime}] Error. Id: {reqId}  Code: {errorCode}  Msg: {errorMsg}  "
+                f"AdvancedOrderRejectJson: {advancedOrderRejectJson}"
+            )
         else:
-            print("Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
+            print(f"[{errorTime}] Error. Id: {reqId}  Code: {errorCode}  Msg: {errorMsg}")
 
     @iswrapper
     def winError(self, text: str, lastError: int):
@@ -616,7 +620,7 @@ class TestApp(TestWrapper, TestClient):
             if not all_orders_cancelled and minutes_to_market_open < 15:
 
                 for old_id in old_orderids:
-                    self.cancelOrder(int(old_id), "")
+                    self.cancelOrder(int(old_id), OrderCancel())
 
                 all_orders_cancelled = True
 
@@ -818,7 +822,7 @@ class TestApp(TestWrapper, TestClient):
                         io_list.loc[j, 'Sell bellow SMA [$]'] = io_list_update['Sell bellow SMA [$]'][j]
 
                         # Cancel current bracket oder
-                        self.cancelOrder(int(io_list['profitOrderId'][j]), "")
+                        self.cancelOrder(int(io_list['profitOrderId'][j]), OrderCancel())
 
                         # Only required if the quantity is trimmed
                         if io_list_update['Quantity [#]'][j] < io_list['Quantity [#]'][j]:
@@ -1086,7 +1090,7 @@ class TestApp(TestWrapper, TestClient):
                 ) and io_list['Symbol'][i] == io_list['Symbol'][reqId]:
 
                     # Cancel current bracket oder
-                    self.cancelOrder(int(io_list['profitOrderId'][i]), "")
+                    self.cancelOrder(int(io_list['profitOrderId'][i]), OrderCancel())
 
                     # Place new OCA profit taker with adjusted stop loss
                     contract = MyUtilities.get_contract_details(io_list, i)
@@ -1137,7 +1141,7 @@ class TestApp(TestWrapper, TestClient):
                 round(io_list['Quantity [#]'][reqId], 0) > 1:
 
             # Cancels current bracket oder
-            self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+            self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
             # Shoot market sell order for 50%
             contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1181,7 +1185,7 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, '5% above buy point [time]'] = time_now_str
 
             # Cancel current bracket oder
-            self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+            self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
             # Place new OCA profit taker and stop loss with stop at B/E
             contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1222,7 +1226,7 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Sell on close'] = False
 
             # Cancels current bracket oder
-            self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+            self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
             # Place new bracket without GAT portion
             contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1257,7 +1261,7 @@ class TestApp(TestWrapper, TestClient):
                     ):
 
                 # Cancels current bracket oder
-                self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+                self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
                 # Shoot market sell order for 50%
                 contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1292,7 +1296,7 @@ class TestApp(TestWrapper, TestClient):
                     io_list['LAST price [$]'][reqId] < io_list['Entry price [$]'][reqId]:
 
                 # Cancels current bracket oder
-                self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+                self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
                 # Shoot market sell order
                 contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1324,7 +1328,7 @@ class TestApp(TestWrapper, TestClient):
             if profit_price <= io_list['LAST price [$]'][reqId]:
                 io_list.loc[reqId, 'x-R profits'] = True
                 # Cancels current bracket oder
-                self.cancelOrder(int(io_list['profitOrderId'][reqId]), "")
+                self.cancelOrder(int(io_list['profitOrderId'][reqId]), OrderCancel())
 
                 # Shoot market sell order for 50%
                 contract = MyUtilities.get_contract_details(io_list, reqId)
@@ -1458,10 +1462,8 @@ class TestApp(TestWrapper, TestClient):
         print("ExecDetailsEnd. ReqId:", reqId)
 
     @iswrapper
-    def commissionReport(self, commissionReport: CommissionReport):
-        super().commissionReport(commissionReport)
-        print("\nCommissionReport. Commission:", round(commissionReport.commission, 2), "Currency:",
-              commissionReport.currency, "RealizedPnL:", round(commissionReport.realizedPNL, 2))
+    def commissionAndFeesReport(self, commissionAndFeesReport: CommissionAndFeesReport):
+        print("CommissionReport.", commissionAndFeesReport)
 
     @iswrapper
     def currentTime(self, time: int):

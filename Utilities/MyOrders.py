@@ -21,8 +21,8 @@ class MyOrders:
         parent.goodTillDate = \
             (datetime.datetime.now().astimezone(pytz.timezone(timezone)) + datetime.timedelta(minutes=1)) \
                 .strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
-        parent.lmtPrice = round(io_list['Buy limit price [$]'][req_id], 2)
-        parent.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
+        parent.lmtPrice = float(round(io_list['Buy limit price [$]'][req_id], 2))
+        parent.totalQuantity = int(round(io_list['Quantity [#]'][req_id], 0))
         parent.transmit = False
 
         # Profit Target
@@ -31,8 +31,8 @@ class MyOrders:
         profit_target_order.orderType = "LMT"
         profit_target_order.action = "SELL"
         profit_target_order.tif = "GTC"
-        profit_target_order.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
-        profit_target_order.lmtPrice = round(io_list['Profit taker price [$]'][req_id], 2)
+        profit_target_order.totalQuantity = int(round(io_list['Quantity [#]'][req_id], 0))
+        profit_target_order.lmtPrice = float(round(io_list['Profit taker price [$]'][req_id], 2))
         profit_target_order.parentId = parent_order_id
         profit_target_order.transmit = False
 
@@ -42,8 +42,8 @@ class MyOrders:
         stop_loss_order.orderType = "STP"
         stop_loss_order.action = "SELL"
         stop_loss_order.tif = "GTC"
-        stop_loss_order.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
-        stop_loss_order.auxPrice = round(io_list['Stop price [$]'][req_id], 2)
+        stop_loss_order.totalQuantity = int(round(io_list['Quantity [#]'][req_id], 0))
+        stop_loss_order.auxPrice = float(round(io_list['Stop price [$]'][req_id], 2))
         stop_loss_order.parentId = parent_order_id
         stop_loss_order.transmit = True
 
@@ -56,7 +56,7 @@ class MyOrders:
             market_on_close_order.tif = "DAY"
             market_on_close_order.goodAfterTime = \
                 (market_close - datetime.timedelta(minutes=3)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
-            market_on_close_order.totalQuantity = round(io_list['Quantity [#]'][req_id], 0)
+            market_on_close_order.totalQuantity = int(round(io_list['Quantity [#]'][req_id], 0))
             market_on_close_order.parentId = parent_order_id
             market_on_close_order.transmit = True
             # Only the very last child of the array is allowed to be .transmit = True
@@ -92,8 +92,8 @@ class MyOrders:
         profit_target_order.orderType = "LMT"
         profit_target_order.action = "SELL"
         profit_target_order.tif = "GTC"
-        profit_target_order.totalQuantity = total_quantity
-        profit_target_order.lmtPrice = lmt_price
+        profit_target_order.totalQuantity = int(total_quantity)
+        profit_target_order.lmtPrice = float(lmt_price)
         profit_target_order.ocaGroup = "OCA_" + str(order_id)
         profit_target_order.ocaType = 2
 
@@ -103,8 +103,8 @@ class MyOrders:
         stop_loss_order.orderType = "STP"
         stop_loss_order.action = "SELL"
         stop_loss_order.tif = "GTC"
-        stop_loss_order.totalQuantity = total_quantity
-        stop_loss_order.auxPrice = aux_price
+        stop_loss_order.totalQuantity = int(total_quantity)
+        stop_loss_order.auxPrice = float(aux_price)
         stop_loss_order.ocaGroup = "OCA_" + str(order_id)
         stop_loss_order.ocaType = 2
 
@@ -118,7 +118,7 @@ class MyOrders:
             market_on_close_order.ocaGroup = "OCA_" + str(order_id)
             market_on_close_order.goodAfterTime = \
                 (market_close - datetime.timedelta(minutes=3)).strftime("%Y%m%d %H:%M:%S " + ib_timezone_str)
-            market_on_close_order.totalQuantity = total_quantity
+            market_on_close_order.totalQuantity = int(total_quantity)
             market_on_close_order.ocaType = 2
 
             oca = [profit_target_order, stop_loss_order, market_on_close_order]
@@ -149,7 +149,7 @@ class MyOrders:
         order.orderId = order_id
         order.orderType = "MKT"
         order.action = "SELL"
-        order.totalQuantity = total_quantity
+        order.totalQuantity = int(total_quantity)
 
         # Reporting
         io_list.loc[req_id, 'marketOrderId'] = order_id
