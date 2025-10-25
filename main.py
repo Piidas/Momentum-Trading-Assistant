@@ -1318,7 +1318,7 @@ class TestApp(TestWrapper, TestClient):
                 io_list.loc[reqId, 'Stock sold'] = True
                 io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
 
-        # Sells half of the position for profit at x-R on day 1 to cushion risk
+        # Sells 1/x of the position for profit at x-R on day 1 to cushion risk
         if (pd.notna(io_list['Profit at x-R'][reqId]) and not io_list['Open position'][reqId] and \
                     io_list['Order filled'][reqId] and not io_list['Stock sold'][reqId] and \
                     not io_list['x-R profits'][reqId]):
@@ -1341,7 +1341,7 @@ class TestApp(TestWrapper, TestClient):
 
                 # Shoot market sell order for 50%
                 contract = MyUtilities.get_contract_details(io_list, reqId)
-                total_quantity = math.ceil(round(io_list['Quantity [#]'][reqId], 0) / 2)
+                total_quantity = math.ceil(round(io_list['Quantity [#]'][reqId], 0) / io_list['Profit at x-R'][reqId])
                 order, io_list = MyOrders.sell_market_order(self.nextOrderId(), reqId, total_quantity, io_list)
                 self.placeOrder(order.orderId, contract, order)
 
@@ -1350,7 +1350,7 @@ class TestApp(TestWrapper, TestClient):
                       f"{round(io_list['Profit at x-R'][reqId] * 100 * stop_risk_rel, 1)}% profit - "
                       f"sold half. ( {time_now_str} )")
 
-                total_quantity = math.floor(round(io_list['Quantity [#]'][reqId], 0) / 2)
+                total_quantity = math.floor(round(io_list['Quantity [#]'][reqId], 0) / io_list['Profit at x-R'][reqId])
                 lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
                 aux_price = round(io_list['Stop price [$]'][reqId], 2)
                 oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
