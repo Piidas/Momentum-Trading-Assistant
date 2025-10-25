@@ -90,7 +90,7 @@ old_orderids = []
 sum_of_open_positions = []
 fetch_stock_data_thread = None
 open_positions_check_done = False
-last_orderStatus_message = {}
+last_order_status_by_id = {}
 
 # Read Excel files using read_excel_inputs()
 io_list = MyUtilities.read_excel_inputs(NAME_OF_DAILYTRADINGPLAN, index_col=0)
@@ -358,7 +358,7 @@ class TestApp(TestWrapper, TestClient):
                     whyHeld: str, mktCapPrice: float):
         global io_list
         global old_orderids
-        global last_orderStatus_message
+        global last_order_status_by_id
 
         super().orderStatus(orderId, status, filled, remaining,
                             avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice)
@@ -366,22 +366,31 @@ class TestApp(TestWrapper, TestClient):
         # Used to later delete orders from last session
         old_orderids.append(orderId)
 
-        current_message = {
-            "Order Status - Order ID": orderId,
-            "Status": status,
-            "Filled": decimalMaxString(filled),
-            "Remaining": decimalMaxString(remaining),
-            "AvgFillPrice": floatMaxString(avgFillPrice),
-            "ParentId": parentId,
-        }
+        # Create a tuple snapshot of relevant info
+        current_snapshot = (
+            status,
+            decimalMaxString(filled),
+            decimalMaxString(remaining),
+            floatMaxString(avgFillPrice),
+            parentId,
+        )
 
-        if is_market_open and current_message != last_orderStatus_message:
-            print("Order Status - Order ID:", orderId, "Status:", status, "Filled:", decimalMaxString(filled),
-                  "Remaining:", decimalMaxString(remaining), "AvgFillPrice:", floatMaxString(avgFillPrice),
-                  "Parent ID:", parentId,
-                  "(", datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"), ")")
+        # Only print if this order's state actually changed
+        if is_market_open and last_order_status_by_id.get(orderId) != current_snapshot:
+            print(
+                "Order Status - Order ID:", orderId,
+                "Status:", status,
+                "Filled:", decimalMaxString(filled),
+                "Remaining:", decimalMaxString(remaining),
+                "AvgFillPrice:", floatMaxString(avgFillPrice),
+                "Parent ID:", parentId,
+                "(",
+                datetime.datetime.now().astimezone(pytz.timezone(TIMEZONE)).strftime("%H:%M:%S"),
+                ")"
+            )
 
-            last_orderStatus_message = current_message.copy()
+            # Remember this snapshot for next comparison
+            last_order_status_by_id[orderId] = current_snapshot
 
         io_list = MyUtilities.update_io_list_order_execution_status(status, orderId, lastFillPrice, filled, remaining,
                                                                     io_list, TIMEZONE)
