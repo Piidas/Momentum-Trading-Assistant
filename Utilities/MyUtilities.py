@@ -236,10 +236,11 @@ class MyUtilities:
                 index = io_list[io_list['parentOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Order filled'] = True
                 io_list.loc[index, 'Entry price [$]'] = last_fill_f
-                print("\nStock ID:", index, io_list['Symbol'][index], "buy order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled_f > 0:
                     io_list.loc[index, 'Quantity [#]'] = int(filled_f)
+                if remaining_f == 0:
+                    print("\nStock ID:", index, io_list['Symbol'][index], "buy order completely filled. (",
+                          datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
                 pass
@@ -248,8 +249,6 @@ class MyUtilities:
                 index = io_list[io_list['profitOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Profit order filled'] = True
                 io_list.loc[index, 'Profit taker price [$]'] = last_fill_f
-                print("\nStock ID:", index, io_list['Symbol'][index], "profit order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
@@ -257,7 +256,7 @@ class MyUtilities:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
-                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold for profit. (",
                           datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
@@ -267,8 +266,6 @@ class MyUtilities:
                 index = io_list[io_list['stopOrderId'] == order_id].index.item()
                 io_list.loc[index, 'Stop order filled'] = True
                 io_list.loc[index, 'Stop price [$]'] = last_fill_f
-                print("\nStock ID:", index, io_list['Symbol'][index], "stop loss order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
@@ -276,7 +273,7 @@ class MyUtilities:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
-                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold - stop hit. (",
                           datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
@@ -286,8 +283,6 @@ class MyUtilities:
                 index = io_list[io_list['sellOnCloseOrderId'] == order_id].index.item()
                 io_list.loc[index, 'SOC order filled'] = True
                 io_list.loc[index, 'Sell bellow SMA [$]'] = last_fill_f
-                print("\nStock ID:", index, io_list['Symbol'][index], "SOC order filled. (",
-                      datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
                 if filled_f > 0:
                     # Uses "remaining" since I want to know the position remaining in my portfolio
                     io_list.loc[index, 'Quantity [#]'] = int(remaining_f)
@@ -295,7 +290,7 @@ class MyUtilities:
                     io_list.loc[index, 'Stock sold'] = True
                     io_list.loc[index, 'Stock sold [time]'] = \
                         datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S")
-                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold. (",
+                    print("\nStock ID:", index, io_list['Symbol'][index], "completely sold - SOC order filled. (",
                           datetime.datetime.now().astimezone(pytz.timezone(timezone)).strftime("%H:%M:%S"), ")")
 
             except:
