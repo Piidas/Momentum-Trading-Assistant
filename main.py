@@ -950,7 +950,11 @@ class TestApp(TestWrapper, TestClient):
             if not io_list['Crossed buy price'][reqId]:
                 io_list.loc[reqId, 'Crossed buy price'] = True
                 io_list.loc[reqId, 'Crossed buy price [time]'] = time_now_str
-                print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price. ( {time_now_str} )")
+                if io_list.loc[reqId, 'Stop undercut']:
+                    print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price,"
+                          f" but stop is already undercut. ( {time_now_str} )")
+                else:
+                    print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price. ( {time_now_str} )")
                 io_list.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
 
             # Checks if I would reach my daily investment limit with this buy order
