@@ -1053,17 +1053,20 @@ class TestApp(TestWrapper, TestClient):
                     stop_risk_abs = (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]) * \
                                          io_list['Quantity [#]'][reqId]
 
-                    # Ensures a min. -1% stop
-                    if io_list['LAST price [$]'][reqId] * 0.99 > io_list['LOW price [$]'][reqId]:
+                    # Uses half of the original risk within first 10 Minutes of trading and the low of day thereafter
+                    if time_now < market_opening + datetime.timedelta(minutes=10):
+                        risk_per_share = io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]
+                        new_risk_per_share = risk_per_share / 2
+                        io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId] - new_risk_per_share
+                        print(
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price within first 10 minutes "
+                            f"and therefore uses 50% of original risk instead of low of day. "
+                            f"{io_list['Stop price [$]'][reqId]} is the stop loss price. ( {time_now_str} )")
+                    else:
                         io_list.loc[reqId, 'Stop price [$]'] = io_list['LOW price [$]'][reqId]
                         print(
                             f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} uses low of the day of "
                             f"{io_list['Stop price [$]'][reqId]} as stop loss price. ( {time_now_str} )")
-                    else:
-                        io_list.loc[reqId, 'Stop price [$]'] = io_list['LAST price [$]'][reqId] * 0.99
-                        print(
-                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} low of the day is too tight, therefore "
-                            f"-1% stop of {io_list['Stop price [$]'][reqId]} is used instead. ( {time_now_str} )")
 
                     # Adjust position size to match pre-defined absolute risk
                     new_quantity = stop_risk_abs / (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId])
