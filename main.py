@@ -1053,15 +1053,26 @@ class TestApp(TestWrapper, TestClient):
                     stop_risk_abs = (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]) * \
                                          io_list['Quantity [#]'][reqId]
 
-                    # Uses half of the original risk within first 10 Minutes of trading and the low of day thereafter
+                    # Uses half of the original risk or low of day, whatever is wider
+                    # within first 10 Minutes of trading and the low of day thereafter
                     if time_now < market_opening + datetime.timedelta(minutes=10):
                         risk_per_share = io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]
-                        new_risk_per_share = risk_per_share / 2
-                        io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId] - new_risk_per_share
-                        print(
-                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price within first 10 minutes "
-                            f"and therefore uses 50% of original risk instead of low of day. "
-                            f"{io_list['Stop price [$]'][reqId]} is the stop loss price. ( {time_now_str} )")
+                        risk_per_share_halved = risk_per_share / 2
+                        risk_per_share_LoD = io_list['Entry price [$]'][reqId] - io_list['LOW price [$]'][reqId]
+
+                        if risk_per_share_halved >= risk_per_share_LoD:
+                            io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId] - \
+                                                                   risk_per_share_halved
+                            print(
+                                f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price within "
+                                f"first 10 minutes and therefore uses 50% of original risk instead of low of day. "
+                                f"{io_list['Stop price [$]'][reqId]} is the stop loss price. ( {time_now_str} )")
+                        else:
+                            io_list.loc[reqId, 'Stop price [$]'] = io_list['LOW price [$]'][reqId]
+                            print(
+                                f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price within "
+                                f"first 10 minutes - still used low of day as stop due to its width. "
+                                f"{io_list['Stop price [$]'][reqId]} is the stop loss price. ( {time_now_str} )")
                     else:
                         io_list.loc[reqId, 'Stop price [$]'] = io_list['LOW price [$]'][reqId]
                         print(
@@ -1355,9 +1366,9 @@ class TestApp(TestWrapper, TestClient):
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} reached {io_list['Profit at x-R'][reqId]}-times "
                       f"risk at {io_list['LAST price [$]'][reqId]} for "
                       f"{round(io_list['Profit at x-R'][reqId] * 100 * stop_risk_rel, 1)}% profit - "
-                      f"sold half. ( {time_now_str} )")
+                      f"sold 1/{io_list['Profit at x-R'][reqId]}. ( {time_now_str} )")
 
-                total_quantity = math.floor(round(io_list['Quantity [#]'][reqId], 0) / io_list['Profit at x-R'][reqId])
+                total_quantity = round(io_list['Quantity [#]'][reqId], 0) - total_quantity
                 lmt_price = round(io_list['Profit taker price [$]'][reqId], 2)
                 aux_price = round(io_list['Stop price [$]'][reqId], 2)
                 oca, io_list = MyOrders.one_cancels_all(self.nextOrderId(), total_quantity, lmt_price, aux_price, reqId,
@@ -1367,6 +1378,8 @@ class TestApp(TestWrapper, TestClient):
                     self.nextOrderId()
                 io_list.loc[reqId, 'x-R profits [time]'] = time_now_str
                 io_list.loc[reqId, 'Quantity [#]'] = total_quantity
+                MyUtilities.dailytradingplan_update(reqId, io_list['Stop price [$]'][reqId],
+                                                    io_list['Quantity [#]'][reqId], NAME_OF_DAILYTRADINGPLAN)
 
     @iswrapper
     def tickSize(self, reqId: TickerId, tickType: TickType, size: Decimal):
