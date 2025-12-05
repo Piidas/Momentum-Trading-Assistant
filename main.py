@@ -1058,7 +1058,7 @@ class TestApp(TestWrapper, TestClient):
                     if time_now < market_opening + datetime.timedelta(minutes=10):
                         risk_per_share = io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId]
                         risk_per_share_halved = risk_per_share / 2
-                        risk_per_share_LoD = io_list['Entry price [$]'][reqId] - io_list['LOW price [$]'][reqId]
+                        risk_per_share_LoD = io_list['LAST price [$]'][reqId] - io_list['LOW price [$]'][reqId]
 
                         if risk_per_share_halved >= risk_per_share_LoD:
                             io_list.loc[reqId, 'Stop price [$]'] = io_list['Entry price [$]'][reqId] - \
@@ -1080,7 +1080,7 @@ class TestApp(TestWrapper, TestClient):
                             f"{io_list['Stop price [$]'][reqId]} as stop loss price. ( {time_now_str} )")
 
                     # Adjust position size to match pre-defined absolute risk
-                    new_quantity = stop_risk_abs / (io_list['Entry price [$]'][reqId] - io_list['Stop price [$]'][reqId])
+                    new_quantity = stop_risk_abs / (io_list['LAST price [$]'][reqId] - io_list['Stop price [$]'][reqId])
                     print(
                         f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} buy quantity changed from "
                         f"{io_list['Quantity [#]'][reqId]} to {round(new_quantity, 0)}. ( {time_now_str} )")
