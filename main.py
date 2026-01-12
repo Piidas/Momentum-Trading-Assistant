@@ -91,6 +91,7 @@ sum_of_open_positions = []
 fetch_stock_data_thread = None
 open_positions_check_done = False
 last_order_status_by_id = {}
+limit_absolute_risk = False
 
 # Read Excel files using read_excel_inputs()
 io_list = MyUtilities.read_excel_inputs(NAME_OF_DAILYTRADINGPLAN, index_col=0)
@@ -121,9 +122,34 @@ dailyPlanUpdated = input("\nHave you updated the DailyTradingPlan on the server?
 if dailyPlanUpdated != "y":
     exit()
 
-# Defines daily investment limits
-invested_max = int(input("\nWhat is your maximum you want to go in the market today [%]?\n"))
-percent_invested_max = invested_max / 100
+# Lets user choose to define a max. percent invested per day or a max. absolute risk
+while True:
+    daily_investment_limit_type = input(
+        "Would you like to limit the maximum of new positions today by:\n"
+        "\tA) The maximum %-invested of your portfolio?\n"
+        "or\n"
+        "\tB) The maximum absolute risk?\n"
+        'Please answer "A" or "B": '
+    ).strip()
+
+    if daily_investment_limit_type in ("A", "B"):
+        break
+    print("Invalid input. Please type A or B.\n")
+
+print(f"You selected option {daily_investment_limit_type}.")
+
+if daily_investment_limit_type == "A":
+    limit_absolute_risk = False
+    # Defines daily investment limit by %-invested
+    invested_max = float(input("\nWhat is your maximum you want to go in the market today [%]?\n"))
+    percent_invested_max = invested_max / 100.0
+else:
+    limit_absolute_risk = True
+    # Defines daily investment limit by absolute risk (in account/base currency)
+    risk_abs_max = float(input(
+        "\nWhat is your maximum absolute risk you want to take through new positions today "
+        "(in your account currency)?\n"
+    ))
 
 
 def SetupLogger():
@@ -731,7 +757,7 @@ class TestApp(TestWrapper, TestClient):
 
         # Only continues in logic if all relevant data points are already received and market_hours are defined
         if pd.isnull(io_list['LAST price [$]'][reqId]) or pd.isnull(io_list['ASK price [$]'][reqId]) or \
-                pd.isnull(io_list['BID price [$]'][reqId]):
+                pd.isnull(io_list['BID price [$]'][reqId]) or pd.isnull(io_list['LOW price [$]'][reqId]):
             return
 
         # Updating DailyTradingPlan
@@ -910,23 +936,6 @@ class TestApp(TestWrapper, TestClient):
             io_list.loc[reqId, 'Stop undercut [time]'] = time_now_str
             print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} has undercut the stop. ( {time_now_str} )")
 
-        # SHIFTED THIS TO MyUtilities.py
-        # TEST
-        # # Sets marker if stock is sold for open positions and new positions
-        # if (
-        #         (
-        #                 io_list['Open position'][reqId] or
-        #                 (not io_list['Open position'][reqId] and io_list['Order filled'][reqId])
-        #         ) and
-        #         not io_list['Stock sold'][reqId]
-        # ) and \
-        #         (
-        #                 io_list['Profit order filled'][reqId] or io_list['Stop order filled'][reqId] or
-        #                 io_list['SOC order filled'][reqId]
-        #         ):
-        #     io_list.loc[reqId, 'Stock sold'] = True
-        #     io_list.loc[reqId, 'Stock sold [time]'] = time_now_str
-
         # Only continues if all relevant data points are defined and parameters given
         if pd.isnull(percent_invested) or portfolio_size is None or percent_invested is None or \
                 io_list['Position below limit'][reqId] or io_list['Max. daily loss reached'][reqId]:
@@ -957,30 +966,116 @@ class TestApp(TestWrapper, TestClient):
                     print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} crossed buy price. ( {time_now_str} )")
                 io_list.loc[reqId, "Stop timestamp"] = datetime.datetime.now(tz=None)
 
-            # Checks if I would reach my daily investment limit with this buy order
-            if io_list['Entry price [$]'][reqId] / EXR_RATE * io_list['Quantity [#]'][reqId] \
-                    / portfolio_size + percent_invested > percent_invested_max:
+            entry_price = io_list['Entry price [$]'][reqId]
+            stop_price = io_list['Stop price [$]'][reqId]
+            qty_full = io_list['Quantity [#]'][reqId]
 
-                # Reduces the size of the position to stay within the investment limit
-                io_list.loc[reqId, 'Quantity [#]'] = math.floor(
-                    (percent_invested_max - percent_invested) * portfolio_size
-                    / (io_list['Entry price [$]'][reqId] / EXR_RATE))
+            if not limit_absolute_risk:
+                # ---------------------------------------------
+                # Option A: limit by %-invested (as per previous code versions)
+                # ---------------------------------------------
+                if entry_price / EXR_RATE * qty_full / portfolio_size + percent_invested > percent_invested_max:
 
-                io_list.loc[reqId, 'Invest limit reached'] = True
-                io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
+                    # Reduces the size of the position to stay within the investment limit
+                    io_list.loc[reqId, 'Quantity [#]'] = math.floor(
+                        (percent_invested_max - percent_invested) * portfolio_size
+                        / (entry_price / EXR_RATE)
+                    )
 
-                # Very small resulting positions shall not be traded
-                if io_list['Quantity [#]'][reqId] * io_list['Entry price [$]'][reqId] \
-                        < MIN_POSITION_SIZE * portfolio_size:
-                    io_list.loc[reqId, 'Position below limit'] = True
+                    io_list.loc[reqId, 'Invest limit reached'] = True
+                    io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
+
+                    # Very small resulting positions shall not be traded
+                    if io_list['Quantity [#]'][reqId] * entry_price < MIN_POSITION_SIZE * portfolio_size:
+                        io_list.loc[reqId, 'Position below limit'] = True
+                        print(
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily investment limit - "
+                            f"remainder is below the minimum position size of {round(MIN_POSITION_SIZE * 100, 1)}"
+                            f"% - trade not executed. ( {time_now_str} )"
+                        )
+                        return
+
                     print(
-                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily investment limit - "
-                        f"remainder is below the minimum position size of {round(MIN_POSITION_SIZE * 100, 1)}"
-                        f"% - trade not executed. ( {time_now_str} )")
-                    return
+                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily investment limit. "
+                        f"Position size has been reduced. ( {time_now_str} )"
+                    )
 
-                print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily investment limit. "
-                      f"Position size has been reduced. ( {time_now_str} )")
+            else:
+                # --------------------------------------------------
+                # Option B: limit by absolute risk (new functionality)
+                # --------------------------------------------------
+
+                # 1) Risk already taken today by new, filled positions
+                # "Open position" == False -> not carried into the day
+                # "Order filled" == True   -> new buy-order has been filled
+                mask_new_filled = (~io_list['Open position']) & (io_list['Order filled'])
+
+                current_abs_risk = (
+                        (io_list.loc[mask_new_filled, 'Entry price [$]'] - io_list.loc[
+                            mask_new_filled, 'Stop price [$]'])
+                        * io_list.loc[mask_new_filled, 'Quantity [#]']
+                ).sum()
+
+                # 2) Risk of this order at full size (already in account currency)
+                per_share_risk_base = entry_price - stop_price
+                order_risk_full = per_share_risk_base * qty_full
+
+                print(
+                    f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} position has an additional risk of "
+                    f"{round(order_risk_full, 0)}. New risk taken today is {round(current_abs_risk, 0)}. "
+                    f"( {time_now_str} )"
+                )
+
+                # If this order at full size would exceed the absolute risk limit
+                if current_abs_risk + order_risk_full > risk_abs_max:
+
+                    max_risk_remaining = risk_abs_max - current_abs_risk
+
+                    if max_risk_remaining <= 0:
+                        # No risk budget left at all -> don't trade
+                        io_list.loc[reqId, 'Invest limit reached'] = True
+                        io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
+                        print(
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily absolute risk limit "
+                            f"of {round(risk_abs_max, 0)} - no risk budget left, trade not executed. ( {time_now_str} )"
+                        )
+                        return
+
+                    # 3) Reduce quantity to fit into remaining risk budget
+                    allowed_qty = math.floor(max_risk_remaining / per_share_risk_base)
+
+                    # If we can't even buy 1 share within the remaining risk
+                    if allowed_qty <= 0:
+                        io_list.loc[reqId, 'Invest limit reached'] = True
+                        io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
+                        io_list.loc[reqId, 'Position below limit'] = True
+                        print(
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily absolute risk limit "
+                            f"of {round(risk_abs_max, 0)} - remainder is below the minimum position size of "
+                            f"{round(MIN_POSITION_SIZE * 100, 1)}% - trade not executed. ( {time_now_str} )"
+                        )
+                        return
+
+                    # Apply reduced quantity
+                    io_list.loc[reqId, 'Quantity [#]'] = allowed_qty
+                    io_list.loc[reqId, 'Invest limit reached'] = True
+                    io_list.loc[reqId, 'Invest limit reached [time]'] = time_now_str
+
+                    # Very small resulting positions shall not be traded
+                    if allowed_qty * entry_price < MIN_POSITION_SIZE * portfolio_size:
+                        io_list.loc[reqId, 'Position below limit'] = True
+                        print(
+                            f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily absolute risk limit "
+                            f"of {round(risk_abs_max, 0)} - remainder is below the minimum position size of "
+                            f"{round(MIN_POSITION_SIZE * 100, 1)}% - trade not executed. ( {time_now_str} )"
+                        )
+                        return
+
+                    print(
+                        f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} would exceed my daily absolute risk limit "
+                        f"of {round(risk_abs_max, 0)}. "
+                        f"Position size has been reduced to {allowed_qty}. ( {time_now_str} )"
+                    )
 
             # Terminates all buying if daily loss limit is reached
             if max_daily_loss_reached:
@@ -1098,6 +1193,7 @@ class TestApp(TestWrapper, TestClient):
                     self.nextOrderId()
 
                 io_list.loc[reqId, 'Spread at execution [%]'] = round(stock_spread * 100, 2)
+                io_list.loc[reqId, 'Quantity [#] at open'] = io_list.loc[reqId, 'Quantity [#]']
                 print(f"\nStock ID: {reqId} {io_list['Symbol'][reqId]} - Order placed. ( {time_now_str} )")
 
         # Add & reduce function

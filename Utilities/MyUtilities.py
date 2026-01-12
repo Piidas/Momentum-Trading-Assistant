@@ -108,7 +108,7 @@ class MyUtilities:
         # Define a list of column names to apply the conversion to float
         float_columns_to_convert = ['Entry price [$]', 'Stop price [$]', 'Buy limit price [$]',
                                     'Profit taker price [$]', 'Sell bellow SMA [$]', 'Spread at execution [%]',
-                                    'Profit at x-R',
+                                    'Quantity [#] at open','Profit at x-R',
                                     'Last stop price', 'LAST price [$]', 'BID price [$]', 'ASK price [$]',
                                     'HIGH price [$]', 'LOW price [$]', 'CLOSE price [$]', 'Market sell price [$]']
 
