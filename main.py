@@ -1013,7 +1013,7 @@ class TestApp(TestWrapper, TestClient):
                 current_abs_risk = (
                         (io_list.loc[mask_new_filled, 'Entry price [$]'] - io_list.loc[
                             mask_new_filled, 'Stop price [$]'])
-                        * io_list.loc[mask_new_filled, 'Quantity [#]']
+                        * io_list.loc[mask_new_filled, 'Quantity [#] at open']
                 ).sum()
 
                 # 2) Risk of this order at full size (already in account currency)
